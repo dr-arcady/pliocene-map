@@ -781,10 +781,10 @@ document.addEventListener('DOMContentLoaded', function() {
 	    }
 	});
 
-	// --- Paleoclimate GeoTIFF Layers & Control Setup ---
+	// --- Integrated Paleoclimate & Vector Control ---
 
 	var lsmLayer = new ol.layer.WebGLTile({
-	  visible: false,
+	  visible: true,
 	  opacity: 1.0,
 	  source: new ol.source.GeoTIFF({ sources: [{ url: 'layers/lsm.tif' }] })
 	});
@@ -825,7 +825,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	  source: new ol.source.GeoTIFF({ sources: [{ url: 'layers/lake.tif' }] })
 	});
 	
-	// Add rasters to map (inserted below vector points)
+	// Insert GeoTIFF layers under vector overlays
 	map.getLayers().insertAt(0, lsmLayer);
 	map.getLayers().insertAt(1, topoLayer);
 	map.getLayers().insertAt(2, sstLayer);
@@ -834,7 +834,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	map.getLayers().insertAt(5, iceLayer);
 	map.getLayers().insertAt(6, lakeLayer);
 	
-	// Bind Controls directly (DOM is already loaded at bottom of body)
+	// Bind UI controls directly
 	function bindControl(chkId, opId, layer) {
 	  var checkbox = document.getElementById(chkId);
 	  var slider = document.getElementById(opId);
@@ -854,7 +854,6 @@ document.addEventListener('DOMContentLoaded', function() {
 	  }
 	}
 	
-	// Bind Raster Layers
 	bindControl('chk-lsm', 'op-lsm', lsmLayer);
 	bindControl('chk-topo', 'op-topo', topoLayer);
 	bindControl('chk-sst', 'op-sst', sstLayer);
@@ -863,13 +862,18 @@ document.addEventListener('DOMContentLoaded', function() {
 	bindControl('chk-ice', 'op-ice', iceLayer);
 	bindControl('chk-lake', 'op-lake', lakeLayer);
 	
-	// Bind Fossil Layer Toggle
+	// Fossil Layer Toggle - Iterates through all map layers to find Vector points
 	var fossilChk = document.getElementById('chk-fossils');
 	if (fossilChk) {
 	  fossilChk.addEventListener('change', function(e) {
-	    var layers = map.getLayers().getArray();
-	    layers.forEach(function(layer) {
-	      if (layer instanceof ol.layer.Vector) {
+	    map.getLayers().forEach(function(layer) {
+	      if (layer instanceof ol.layer.Group) {
+	        layer.getLayers().forEach(function(subLayer) {
+	          if (subLayer instanceof ol.layer.Vector) {
+	            subLayer.setVisible(e.target.checked);
+	          }
+	        });
+	      } else if (layer instanceof ol.layer.Vector) {
 	        layer.setVisible(e.target.checked);
 	      }
 	    });
