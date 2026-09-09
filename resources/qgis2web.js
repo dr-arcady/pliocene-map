@@ -15,6 +15,51 @@ var map = new ol.Map({
 //initial view - epsg:4326 coordinates
 map.getView().fit([-180.050000, -90.050000, 180.050000, 90.050000], map.getSize());
 
+// 1. Standard 15-Degree Coordinate Graticule
+var graticule = new ol.layer.Graticule({
+    strokeStyle: new ol.style.Stroke({
+        color: 'rgba(255, 255, 255, 0.25)',
+        width: 1,
+        lineDash: [4, 4]
+    }),
+    showLabels: true,
+    intervals: [15]
+});
+graticule.setMap(map);
+
+// 2. Five Major Latitude Lines (Equator, Tropics, Polar Circles)
+var majorLatitudesSource = new ol.source.Vector();
+var majorLats = [
+    { name: 'Arctic Circle', lat: 66.5636 },
+    { name: 'Tropic of Cancer', lat: 23.4364 },
+    { name: 'Equator', lat: 0.0 },
+    { name: 'Tropic of Capricorn', lat: -23.4364 },
+    { name: 'Antarctic Circle', lat: -66.5636 }
+];
+
+majorLats.forEach(function(item) {
+    var feature = new ol.Feature({
+        geometry: new ol.geom.LineString([[-180, item.lat], [180, item.lat]]),
+        name: item.name
+    });
+    majorLatitudesSource.addFeature(feature);
+});
+
+var majorLatitudesLayer = new ol.layer.Vector({
+    source: majorLatitudesSource,
+    style: function(feature) {
+        var isEquator = feature.get('name') === 'Equator';
+        return new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: isEquator ? 'rgba(255, 215, 0, 0.85)' : 'rgba(255, 255, 255, 0.65)',
+                width: isEquator ? 2 : 1.5,
+                lineDash: isEquator ? null : [6, 4]
+            })
+        });
+    }
+});
+map.addLayer(majorLatitudesLayer);
+
 //change cursor
 function pointerOnFeature(evt) {
     if (evt.dragging) {
