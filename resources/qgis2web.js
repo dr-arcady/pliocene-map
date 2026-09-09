@@ -1105,9 +1105,9 @@ document.addEventListener('DOMContentLoaded', function() {
 	    if (sp) { sp.style.display = 'none'; }
 	}
 
-	// Optimized PBDB Fetch (Lightweight attributes + loader)
-	showSpinner('Fetching Pliocene Fossils (~10k points)...');
-	fetch('https://paleobiodb.org/data1.2/occs/list.json?interval=Pliocene&show=coords,ident')
+	// Reliable PBDB Fetch (Attaches all attributes safely)
+	showSpinner('Fetching Pliocene Fossils...');
+	fetch('https://paleobiodb.org/data1.2/occs/list.json?interval=Pliocene&show=coords,ident,attr')
 	    .then(function(res) { return res.json(); })
 	    .then(function(data) {
 	        if (data && data.records) {
@@ -1116,11 +1116,10 @@ document.addEventListener('DOMContentLoaded', function() {
 	                var rec = data.records[i];
 	                if (rec.lng !== undefined && rec.lat !== undefined) {
 	                    var feat = new ol.Feature({
-	                        geometry: new ol.geom.Point([rec.lng, rec.lat])
-	                    });
-	                    feat.setProperties({
-	                        tna: rec.tna || rec.nam || 'Fossil Occurrence',
-	                        oid: rec.oid || rec.cid || 'N/A'
+	                        geometry: new ol.geom.Point([rec.lng, rec.lat]),
+	                        // Store full record so popup can safely pull names
+	                        tna: rec.tna || rec.nam || rec.tgn || 'Fossil Occurrence',
+	                        oid: rec.oid || rec.occ_no || rec.cid || 'N/A'
 	                    });
 	                    features.push(feat);
 	                }
@@ -1139,44 +1138,40 @@ document.addEventListener('DOMContentLoaded', function() {
 	        hideSpinner();
 	    });
 
-// --- Responsive Master Map Click Handler ---
+// --- Precision Map Click Handler (Fossil Popup & Coordinates) ---
 map.on('singleclick', function(evt) {
     var popupTextElem = document.getElementById('popup-coord-text');
     var popupElem = document.getElementById('popup');
 
-    // Show immediate feedback
+    var clickedFeature = null;
+
+    // Use hitTolerance so clicking close to a dot triggers the popup reliably
+    map.forEachFeatureAtPixel(evt.pixel, function(feature) {
+        if (feature && (feature.get('tna') || feature.get('oid'))) {
+            clickedFeature = feature;
+            return true;
+        }
+    }, { hitTolerance: 6 });
+
+    if (clickedFeature) {
+        var taxonName = clickedFeature.get('tna') || 'Fossil Occurrence';
+        var recordId = clickedFeature.get('oid') || 'N/A';
+        var lat = evt.coordinate[1].toFixed(4);
+        var lon = evt.coordinate[0].toFixed(4);
+
+        if (popupTextElem) {
+            popupTextElem.innerHTML = '<b>' + taxonName + '</b><br>ID: ' + recordId + '<br>Coords: ' + lat + ', ' + lon;
+        }
+    } else {
+        var lon = evt.coordinate[0].toFixed(4);
+        var lat = evt.coordinate[1].toFixed(4);
+        if (popupTextElem) {
+            popupTextElem.innerText = lat + ", " + lon;
+        }
+    }
+
     if (popupOverlay) popupOverlay.setPosition(evt.coordinate);
     if (popupElem) popupElem.style.display = 'flex';
-    if (popupTextElem) popupTextElem.innerText = 'Reading point data...';
-
-    // Fast feature detection using requestAnimationFrame
-    requestAnimationFrame(function() {
-        var clickedFeature = null;
-        map.forEachFeatureAtPixel(evt.pixel, function(feature) {
-            if (feature && feature.get('tna')) {
-                clickedFeature = feature;
-                return true;
-            }
-        });
-
-        if (clickedFeature) {
-            var props = clickedFeature.getProperties();
-            var taxonName = props.tna || 'Fossil Occurrence';
-            var recordId = props.oid || 'N/A';
-            var lat = evt.coordinate[1].toFixed(4);
-            var lon = evt.coordinate[0].toFixed(4);
-
-            if (popupTextElem) {
-                popupTextElem.innerHTML = '<b>' + taxonName + '</b><br>ID: ' + recordId + '<br>Coords: ' + lat + ', ' + lon;
-            }
-        } else {
-            var lon = evt.coordinate[0].toFixed(4);
-            var lat = evt.coordinate[1].toFixed(4);
-            if (popupTextElem) {
-                popupTextElem.innerText = lat + ", " + lon;
-            }
-        }
-    });
 
     // Auto dismiss after 5s
     if (window.coordPopupTimeout) clearTimeout(window.coordPopupTimeout);
