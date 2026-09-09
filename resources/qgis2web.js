@@ -781,8 +781,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	    }
 	});
 
-	// --- Paleoclimate WebGL GeoTIFF Layers ---
-	
+	// --- Paleoclimate GeoTIFF Layers & Control Setup ---
+
 	var lsmLayer = new ol.layer.WebGLTile({
 	  visible: false,
 	  opacity: 1.0,
@@ -802,13 +802,13 @@ document.addEventListener('DOMContentLoaded', function() {
 	});
 	
 	var biomeLayer = new ol.layer.WebGLTile({
-	  visible: false,
+	  visible: true,
 	  opacity: 0.8,
 	  source: new ol.source.GeoTIFF({ sources: [{ url: 'layers/mbiome.tif' }] })
 	});
 	
 	var soilLayer = new ol.layer.WebGLTile({
-	  visible: true,
+	  visible: false,
 	  opacity: 0.8,
 	  source: new ol.source.GeoTIFF({ sources: [{ url: 'layers/soil.tif' }] })
 	});
@@ -825,37 +825,50 @@ document.addEventListener('DOMContentLoaded', function() {
 	  source: new ol.source.GeoTIFF({ sources: [{ url: 'layers/lake.tif' }] })
 	});
 	
-	// Add rasters to map
-	map.addLayer(lsmLayer);
-	map.addLayer(topoLayer);
-	map.addLayer(sstLayer);
-	map.addLayer(biomeLayer);
-	map.addLayer(soilLayer);
-	map.addLayer(iceLayer);
-	map.addLayer(lakeLayer);
+	// Add rasters to map (inserted below vector points)
+	map.getLayers().insertAt(0, lsmLayer);
+	map.getLayers().insertAt(1, topoLayer);
+	map.getLayers().insertAt(2, sstLayer);
+	map.getLayers().insertAt(3, biomeLayer);
+	map.getLayers().insertAt(4, soilLayer);
+	map.getLayers().insertAt(5, iceLayer);
+	map.getLayers().insertAt(6, lakeLayer);
 	
-	// Bind UI controls
-	function setupLayerControl(chkId, opId, layer) {
-	  var checkbox = document.getElementById(chkId);
-	  var slider = document.getElementById(opId);
+	// Bind Controls safely after DOM load
+	document.addEventListener("DOMContentLoaded", function() {
+	  function bindControl(chkId, opId, layer) {
+	    var checkbox = document.getElementById(chkId);
+	    var slider = document.getElementById(opId);
 	
-	  if (checkbox) {
-	    checkbox.addEventListener('change', function(e) {
-	      layer.setVisible(e.target.checked);
-	    });
+	    if (checkbox) {
+	      layer.setVisible(checkbox.checked);
+	      checkbox.addEventListener('change', function(e) {
+	        layer.setVisible(e.target.checked);
+	      });
+	    }
+	
+	    if (slider) {
+	      layer.setOpacity(parseFloat(slider.value));
+	      slider.addEventListener('input', function(e) {
+	        layer.setOpacity(parseFloat(e.target.value));
+	      });
+	    }
 	  }
 	
-	  if (slider) {
-	    slider.addEventListener('input', function(e) {
-	      layer.setOpacity(parseFloat(e.target.value));
+	  // Bind Raster Layers
+	  bindControl('chk-lsm', 'op-lsm', lsmLayer);
+	  bindControl('chk-topo', 'op-topo', topoLayer);
+	  bindControl('chk-sst', 'op-sst', sstLayer);
+	  bindControl('chk-biome', 'op-biome', biomeLayer);
+	  bindControl('chk-soil', 'op-soil', soilLayer);
+	  bindControl('chk-ice', 'op-ice', iceLayer);
+	  bindControl('chk-lake', 'op-lake', lakeLayer);
+	
+	  // Bind Fossil Layer Toggle (Finds vector layer in qgis2web layers array)
+	  var fossilChk = document.getElementById('chk-fossils');
+	  if (fossilChk && typeof lyr_pliocene_fossils !== 'undefined') {
+	    fossilChk.addEventListener('change', function(e) {
+	      lyr_pliocene_fossils.setVisible(e.target.checked);
 	    });
 	  }
-	}
-	
-	setupLayerControl('chk-lsm', 'op-lsm', lsmLayer);
-	setupLayerControl('chk-topo', 'op-topo', topoLayer);
-	setupLayerControl('chk-sst', 'op-sst', sstLayer);
-	setupLayerControl('chk-biome', 'op-biome', biomeLayer);
-	setupLayerControl('chk-soil', 'op-soil', soilLayer);
-	setupLayerControl('chk-ice', 'op-ice', iceLayer);
-	setupLayerControl('chk-lake', 'op-lake', lakeLayer);
+	});
