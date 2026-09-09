@@ -851,9 +851,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	// --- GeoTIFF Layer Initialization ---
 
-	// REPLACE THIS SECTION:
+	// --- GeoTIFF Layer Initialization ---
 	var lsmLayer = new ol.layer.WebGLTile({
-	  visible: true,
+	  visible: false,
 	  opacity: 1.0,
 	  source: new ol.source.GeoTIFF({
 	    sources: [{ url: 'layers/lsm.tif' }]
@@ -908,7 +908,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	  })
 	});
 	
-	// Add layers to map
+	// Add overlay layers to map
 	map.addLayer(lsmLayer);
 	map.addLayer(topoLayer);
 	map.addLayer(sstLayer);
@@ -916,56 +916,34 @@ document.addEventListener('DOMContentLoaded', function() {
 	map.addLayer(soilLayer);
 	map.addLayer(iceLayer);
 	map.addLayer(lakeLayer);
-	
-	// EXACT LINES TO REPLACE AT THE BOTTOM OF qgis2web.js:
 
-// Helper function to bind checkboxes and sliders safely
-function bindLayerControl(checkboxId, sliderId, layerObject) {
-    if (!layerObject) return;
-    
-    var chk = document.getElementById(checkboxId);
-    if (chk) {
-        // Sync initial visibility with checkbox state
-        layerObject.setVisible(chk.checked);
-        chk.addEventListener('change', function() {
-            layerObject.setVisible(this.checked);
-        });
-    }
+	// Helper function for UI bindings
+	function connectLayer(chkId, sliderId, layer) {
+	    if (!layer) return;
+	    var chk = document.getElementById(chkId);
+	    if (chk) {
+	        layer.setVisible(chk.checked);
+	        chk.addEventListener('change', function() {
+	            layer.setVisible(this.checked);
+	        });
+	    }
+	    var slider = document.getElementById(sliderId);
+	    if (slider) {
+	        slider.addEventListener('input', function() {
+	            layer.setOpacity(parseFloat(this.value));
+	        });
+	    }
+	}
 
-    var slider = document.getElementById(sliderId);
-    if (slider) {
-        slider.addEventListener('input', function() {
-            layerObject.setOpacity(parseFloat(this.value));
-        });
-    }
-}
+	// Connect UI Controls directly to WebGLTile GeoTIFF layers
+	connectLayer('chk-lsm', 'op-lsm', lsmLayer);
+	connectLayer('chk-topo', 'op-topo', topoLayer);
+	connectLayer('chk-sst', 'op-sst', sstLayer);
+	connectLayer('chk-biome', 'op-biome', biomeLayer);
+	connectLayer('chk-soil', 'op-soil', soilLayer);
+	connectLayer('chk-ice', 'op-ice', iceLayer);
+	connectLayer('chk-lake', 'op-lake', lakeLayer);
 
-// 1. Permanently keep the green-blue base map visible
-if (typeof lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 !== 'undefined') {
-    lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0.setVisible(true);
-}
-
-// 2. Bind Land-Sea Mask (the grey overlay)
-// (Checks common qgis2web variable names for the overlay mask)
-var lsmLayer = (typeof lyr_LSM !== 'undefined') ? lyr_LSM : 
-               (typeof lyr_LandSeaMask_1 !== 'undefined') ? lyr_LandSeaMask_1 : 
-               (typeof lyr_Land_Sea_Mask_1 !== 'undefined') ? lyr_Land_Sea_Mask_1 : null;
-
-bindLayerControl('chk-lsm', 'op-lsm', lsmLayer);
-
-// 3. Bind Fossils
-if (typeof pbdbVectorLayer !== 'undefined') {
-    bindLayerControl('chk-fossils', null, pbdbVectorLayer);
-}
-
-// 4. Bind Paleoclimate Layers (Checks both custom and standard qgis2web names)
-bindLayerControl('chk-topo', 'op-topo', typeof lyr_Topo !== 'undefined' ? lyr_Topo : typeof lyr_Topography_2 !== 'undefined' ? lyr_Topography_2 : null);
-bindLayerControl('chk-sst', 'op-sst', typeof lyr_SST !== 'undefined' ? lyr_SST : typeof lyr_SeaSurfaceTemp_2 !== 'undefined' ? lyr_SeaSurfaceTemp_2 : null);
-bindLayerControl('chk-biome', 'op-biome', typeof lyr_Biome !== 'undefined' ? lyr_Biome : typeof lyr_Megabiomes_2 !== 'undefined' ? lyr_Megabiomes_2 : null);
-bindLayerControl('chk-soil', 'op-soil', typeof lyr_Soil !== 'undefined' ? lyr_Soil : typeof lyr_SoilTypes_2 !== 'undefined' ? lyr_SoilTypes_2 : null);
-bindLayerControl('chk-ice', 'op-ice', typeof lyr_Ice !== 'undefined' ? lyr_Ice : typeof lyr_IceMask_2 !== 'undefined' ? lyr_IceMask_2 : null);
-bindLayerControl('chk-lake', 'op-lake', typeof lyr_Lake !== 'undefined' ? lyr_Lake : typeof lyr_Lakes_2 !== 'undefined' ? lyr_Lakes_2 : null);
-	
 	// --- Fix 2: Panel Toggle Handler ---
 	function togglePanel(contentId, arrowId) {
 	  var content = document.getElementById(contentId);
@@ -1139,45 +1117,3 @@ bindLayerControl('chk-lake', 'op-lake', typeof lyr_Lake !== 'undefined' ? lyr_La
 	        }
 	    });
 	
-	// --- 4. Layer Visibility Control Helper ---
-	function bindControl(elementId, eventType, callback) {
-	    var el = document.getElementById(elementId);
-	    if (el) {
-	        el.addEventListener(eventType, callback);
-	    }
-	}
-	
-	// Bind Topography
-	bindControl('chk-topo', 'change', function() {
-	    if (typeof lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 !== 'undefined') {
-	        lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0.setVisible(this.checked);
-	    }
-	});
-	bindControl('op-topo', 'input', function() {
-	    if (typeof lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 !== 'undefined') {
-	        lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0.setOpacity(parseFloat(this.value));
-	    }
-	});
-	
-	// Bind Fossils
-	bindControl('chk-fossils', 'change', function() {
-	    pbdbVectorLayer.setVisible(this.checked);
-	});
-
-// PASTE AT THE VERY BOTTOM OF qgis2web.js:
-
-// Bind Land-Sea Mask Checkbox to the Grey Overlay Layer
-var chkLsm = document.getElementById('chk-lsm');
-if (chkLsm && typeof lyr_LSM !== 'undefined') {
-    lyr_LSM.setVisible(chkLsm.checked);
-    chkLsm.addEventListener('change', function() {
-        lyr_LSM.setVisible(this.checked);
-    });
-}
-
-var opLsm = document.getElementById('op-lsm');
-if (opLsm && typeof lyr_LSM !== 'undefined') {
-    opLsm.addEventListener('input', function() {
-        lyr_LSM.setOpacity(parseFloat(this.value));
-    });
-}
