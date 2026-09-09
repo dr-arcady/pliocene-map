@@ -1161,41 +1161,45 @@ document.addEventListener('DOMContentLoaded', function() {
 	        hideSpinner();
 	    });
 
-// --- Master Map Click Handler (Checks explicit isFossil flag) ---
-map.on('singleclick', function(evt) {
+// --- Direct Canvas Pointer Click Handler ---
+map.getViewport().addEventListener('pointerup', function(e) {
+    var pixel = map.getEventPixel(e);
+    var coord = map.getCoordinateFromPixel(pixel);
+    if (!coord) return;
+
     var popupTextElem = document.getElementById('popup-coord-text');
     var popupElem = document.getElementById('popup');
-
     var clickedFeature = null;
 
-    map.forEachFeatureAtPixel(evt.pixel, function(feature) {
-        if (feature && feature.get('isFossil')) {
+    // Scan all vector layers at the exact clicked pixel
+    map.forEachFeatureAtPixel(pixel, function(feature) {
+        if (feature) {
             clickedFeature = feature;
             return true;
         }
-    }, { hitTolerance: 8 });
+    }, { hitTolerance: 10 });
 
     if (clickedFeature) {
-        var taxonName = clickedFeature.get('tna') || 'Fossil Occurrence';
-        var recordId = clickedFeature.get('oid') || 'N/A';
-        var lat = evt.coordinate[1].toFixed(4);
-        var lon = evt.coordinate[0].toFixed(4);
+        var taxonName = clickedFeature.get('tna') || clickedFeature.get('nam') || 'Fossil Occurrence';
+        var recordId = clickedFeature.get('oid') || clickedFeature.get('occ_no') || 'N/A';
+        var lat = coord[1].toFixed(4);
+        var lon = coord[0].toFixed(4);
 
         if (popupTextElem) {
             popupTextElem.innerHTML = '<b>' + taxonName + '</b><br>ID: ' + recordId + '<br>Coords: ' + lat + ', ' + lon;
         }
     } else {
-        var lon = evt.coordinate[0].toFixed(4);
-        var lat = evt.coordinate[1].toFixed(4);
+        var lon = coord[0].toFixed(4);
+        var lat = coord[1].toFixed(4);
         if (popupTextElem) {
             popupTextElem.innerText = lat + ", " + lon;
         }
     }
 
-    if (popupOverlay) popupOverlay.setPosition(evt.coordinate);
+    if (popupOverlay) popupOverlay.setPosition(coord);
     if (popupElem) popupElem.style.display = 'flex';
 
-    // Auto dismiss after 5s
+    // Auto dismiss after 5 seconds
     if (window.coordPopupTimeout) clearTimeout(window.coordPopupTimeout);
     window.coordPopupTimeout = setTimeout(function() {
         if (popupElem) popupElem.style.display = 'none';
