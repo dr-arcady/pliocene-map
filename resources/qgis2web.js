@@ -147,7 +147,9 @@ map.addLayer(pinLayer);
 mousePosControl.setTarget(document.getElementById('coord-display'));
 
 // Coordinate Jump execution
-document.getElementById('coord-btn').addEventListener('click', function() {
+var coordBtn = document.getElementById('coord-go-btn');
+if (coordBtn) {
+    coordBtn.addEventListener('click', function() {
     var inputVal = document.getElementById('coord-input').value.trim();
     var parts = inputVal.split(',').map(function(item) { return parseFloat(item.trim()); });
     if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
@@ -163,7 +165,8 @@ document.getElementById('coord-btn').addEventListener('click', function() {
     } else {
         alert('Please enter coordinates in "Latitude, Longitude" format (e.g., 15.5, 42.1)');
     }
-});
+    });
+}
 
 //change cursor
 function pointerOnFeature(evt) {
