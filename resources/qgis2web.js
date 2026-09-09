@@ -1094,6 +1094,31 @@ document.addEventListener('DOMContentLoaded', function() {
 	});
 	map.addLayer(pbdbVectorLayer);
 	
+	// --- Unified Self-Contained PBDB Vector Layer & Fetch ---
+	window.pbdbSource = new ol.source.Vector();
+
+	window.pbdbVectorLayer = new ol.layer.Vector({
+	    source: window.pbdbSource,
+	    visible: false,
+	    style: new ol.style.Style({
+	        image: new ol.style.Circle({
+	            radius: 5,
+	            fill: new ol.style.Fill({ color: '#8e44ad' }),
+	            stroke: new ol.style.Stroke({ color: '#ffffff', width: 1 })
+	        })
+	    })
+	});
+	map.addLayer(window.pbdbVectorLayer);
+	window.pbdbVectorLayer.setZIndex(999);
+
+	// Toggle Listener
+	var fossilChk = document.getElementById('chk-fossils');
+	if (fossilChk) {
+	    fossilChk.addEventListener('change', function(e) {
+	        window.pbdbVectorLayer.setVisible(e.target.checked);
+	    });
+	}
+
 	// Helper functions for loading visual
 	function showSpinner(msg) {
 	    var sp = document.getElementById('loading-spinner');
@@ -1105,8 +1130,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	    if (sp) { sp.style.display = 'none'; }
 	}
 
-	// Reliable PBDB Fetch (Attaches all attributes safely)
-	showSpinner('Fetching Fossils');
+	// Fetch Data Directly into Window Source
+	showSpinner('Fetching Pliocene Fossils...');
 	fetch('https://paleobiodb.org/data1.2/occs/list.json?interval=Pliocene&show=coords,ident,attr')
 	    .then(function(res) { return res.json(); })
 	    .then(function(data) {
@@ -1117,18 +1142,16 @@ document.addEventListener('DOMContentLoaded', function() {
 	                if (rec.lng !== undefined && rec.lat !== undefined) {
 	                    var feat = new ol.Feature({
 	                        geometry: new ol.geom.Point([rec.lng, rec.lat]),
-	                        // Store full record so popup can safely pull names
+	                        isFossil: true,
 	                        tna: rec.tna || rec.nam || rec.tgn || 'Fossil Occurrence',
 	                        oid: rec.oid || rec.occ_no || rec.cid || 'N/A'
 	                    });
 	                    features.push(feat);
 	                }
 	            }
-	            fossilSource.addFeatures(features);
-	            
-	            var fossilChk = document.getElementById('chk-fossils');
-	            if (fossilChk && typeof pbdbVectorLayer !== 'undefined') {
-	                pbdbVectorLayer.setVisible(fossilChk.checked);
+	            window.pbdbSource.addFeatures(features);
+	            if (fossilChk) {
+	                window.pbdbVectorLayer.setVisible(fossilChk.checked);
 	            }
 	        }
 	        hideSpinner();
@@ -1138,20 +1161,19 @@ document.addEventListener('DOMContentLoaded', function() {
 	        hideSpinner();
 	    });
 
-// --- Precision Map Click Handler (Fossil Popup & Coordinates) ---
+// --- Master Map Click Handler (Checks explicit isFossil flag) ---
 map.on('singleclick', function(evt) {
     var popupTextElem = document.getElementById('popup-coord-text');
     var popupElem = document.getElementById('popup');
 
     var clickedFeature = null;
 
-    // Use hitTolerance so clicking close to a dot triggers the popup reliably
     map.forEachFeatureAtPixel(evt.pixel, function(feature) {
-        if (feature && (feature.get('tna') || feature.get('oid'))) {
+        if (feature && feature.get('isFossil')) {
             clickedFeature = feature;
             return true;
         }
-    }, { hitTolerance: 6 });
+    }, { hitTolerance: 8 });
 
     if (clickedFeature) {
         var taxonName = clickedFeature.get('tna') || 'Fossil Occurrence';
