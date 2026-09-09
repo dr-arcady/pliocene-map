@@ -1163,3 +1163,21 @@ bindLayerControl('chk-lake', 'op-lake', typeof lyr_Lake !== 'undefined' ? lyr_La
 	bindControl('chk-fossils', 'change', function() {
 	    pbdbVectorLayer.setVisible(this.checked);
 	});
+
+// PASTE AT THE VERY BOTTOM OF qgis2web.js:
+
+// Bind Land-Sea Mask Checkbox to the Grey Overlay Layer
+var chkLsm = document.getElementById('chk-lsm');
+if (chkLsm && typeof lyr_LSM !== 'undefined') {
+    lyr_LSM.setVisible(chkLsm.checked);
+    chkLsm.addEventListener('change', function() {
+        lyr_LSM.setVisible(this.checked);
+    });
+}
+
+var opLsm = document.getElementById('op-lsm');
+if (opLsm && typeof lyr_LSM !== 'undefined') {
+    opLsm.addEventListener('input', function() {
+        lyr_LSM.setOpacity(parseFloat(this.value));
+    });
+}
