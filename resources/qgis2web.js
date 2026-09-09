@@ -917,33 +917,54 @@ document.addEventListener('DOMContentLoaded', function() {
 	map.addLayer(iceLayer);
 	map.addLayer(lakeLayer);
 	
-	// Bind Layer Control Panel UI
-	function bindControl(chkId, opId, layer) {
-	  var checkbox = document.getElementById(chkId);
-	  var slider = document.getElementById(opId);
-	
-	  if (checkbox) {
-	    layer.setVisible(checkbox.checked);
-	    checkbox.addEventListener('change', function(e) {
-	      layer.setVisible(e.target.checked);
-	    });
-	  }
-	
-	  if (slider) {
-	    layer.setOpacity(parseFloat(slider.value));
-	    slider.addEventListener('input', function(e) {
-	      layer.setOpacity(parseFloat(e.target.value));
-	    });
-	  }
-	}
-	
-	bindControl('chk-lsm', 'op-lsm', lsmLayer);
-	bindControl('chk-topo', 'op-topo', topoLayer);
-	bindControl('chk-sst', 'op-sst', sstLayer);
-	bindControl('chk-biome', 'op-biome', biomeLayer);
-	bindControl('chk-soil', 'op-soil', soilLayer);
-	bindControl('chk-ice', 'op-ice', iceLayer);
-	bindControl('chk-lake', 'op-lake', lakeLayer);
+	// EXACT LINES TO REPLACE AT THE BOTTOM OF qgis2web.js:
+
+// Helper function to bind checkboxes and sliders safely
+function bindLayerControl(checkboxId, sliderId, layerObject) {
+    if (!layerObject) return;
+    
+    var chk = document.getElementById(checkboxId);
+    if (chk) {
+        // Sync initial visibility with checkbox state
+        layerObject.setVisible(chk.checked);
+        chk.addEventListener('change', function() {
+            layerObject.setVisible(this.checked);
+        });
+    }
+
+    var slider = document.getElementById(sliderId);
+    if (slider) {
+        slider.addEventListener('input', function() {
+            layerObject.setOpacity(parseFloat(this.value));
+        });
+    }
+}
+
+// 1. Permanently keep the green-blue base map visible
+if (typeof lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 !== 'undefined') {
+    lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0.setVisible(true);
+}
+
+// 2. Bind Land-Sea Mask (the grey overlay)
+// (Checks common qgis2web variable names for the overlay mask)
+var lsmLayer = (typeof lyr_LSM !== 'undefined') ? lyr_LSM : 
+               (typeof lyr_LandSeaMask_1 !== 'undefined') ? lyr_LandSeaMask_1 : 
+               (typeof lyr_Land_Sea_Mask_1 !== 'undefined') ? lyr_Land_Sea_Mask_1 : null;
+
+bindLayerControl('chk-lsm', 'op-lsm', lsmLayer);
+
+// 3. Bind Fossils
+if (typeof pbdbVectorLayer !== 'undefined') {
+    bindLayerControl('chk-fossils', null, pbdbVectorLayer);
+}
+
+// 4. Bind Paleoclimate Layers (Checks both custom and standard qgis2web names)
+bindLayerControl('chk-topo', 'op-topo', typeof lyr_Topo !== 'undefined' ? lyr_Topo : typeof lyr_Topography_2 !== 'undefined' ? lyr_Topography_2 : null);
+bindLayerControl('chk-sst', 'op-sst', typeof lyr_SST !== 'undefined' ? lyr_SST : typeof lyr_SeaSurfaceTemp_2 !== 'undefined' ? lyr_SeaSurfaceTemp_2 : null);
+bindLayerControl('chk-biome', 'op-biome', typeof lyr_Biome !== 'undefined' ? lyr_Biome : typeof lyr_Megabiomes_2 !== 'undefined' ? lyr_Megabiomes_2 : null);
+bindLayerControl('chk-soil', 'op-soil', typeof lyr_Soil !== 'undefined' ? lyr_Soil : typeof lyr_SoilTypes_2 !== 'undefined' ? lyr_SoilTypes_2 : null);
+bindLayerControl('chk-ice', 'op-ice', typeof lyr_Ice !== 'undefined' ? lyr_Ice : typeof lyr_IceMask_2 !== 'undefined' ? lyr_IceMask_2 : null);
+bindLayerControl('chk-lake', 'op-lake', typeof lyr_Lake !== 'undefined' ? lyr_Lake : typeof lyr_Lakes_2 !== 'undefined' ? lyr_Lakes_2 : null);
 	
 	// --- Fix 2: Panel Toggle Handler ---
 	function togglePanel(contentId, arrowId) {
