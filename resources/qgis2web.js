@@ -1034,6 +1034,15 @@ document.addEventListener('DOMContentLoaded', function() {
 	    
 	    popupElement.style.display = 'flex';
 	    popupOverlay.setPosition(evt.coordinate);
+
+	    // Automatically hide the popup after 5 seconds
+	    if (window.coordPopupTimeout) {
+	        clearTimeout(window.coordPopupTimeout);
+	    }
+	    window.coordPopupTimeout = setTimeout(function() {
+	        popupElement.style.display = 'none';
+	        popupOverlay.setPosition(undefined);
+	    }, 5000);
 	  }
 	});
 	
