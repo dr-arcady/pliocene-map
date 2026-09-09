@@ -781,73 +781,85 @@ document.addEventListener('DOMContentLoaded', function() {
 	    }
 	});
 
-	// --- Integrated Paleoclimate & Vector Control ---
+	// --- Updated GeoTIFF Layer Definitions ---
 
-	var lsmLayer = new ol.layer.WebGLTile({
-	  visible: true,
+	var lsmLayer = new ol.layer.Tile({
+	  visible: false,
 	  opacity: 1.0,
-	  source: new ol.source.GeoTIFF({ sources: [{ url: 'layers/lsm.tif' }] })
+	  source: new ol.source.GeoTIFF({
+	    sources: [{ url: './layers/lsm.tif' }]
+	  })
 	});
 	
-	var topoLayer = new ol.layer.WebGLTile({
+	var topoLayer = new ol.layer.Tile({
 	  visible: false,
 	  opacity: 0.8,
-	  source: new ol.source.GeoTIFF({ sources: [{ url: 'layers/topo.tif' }] })
+	  source: new ol.source.GeoTIFF({
+	    sources: [{ url: './layers/topo.tif' }]
+	  })
 	});
 	
-	var sstLayer = new ol.layer.WebGLTile({
+	var sstLayer = new ol.layer.Tile({
 	  visible: false,
 	  opacity: 0.8,
-	  source: new ol.source.GeoTIFF({ sources: [{ url: 'layers/sst.tif' }] })
+	  source: new ol.source.GeoTIFF({
+	    sources: [{ url: './layers/sst.tif' }]
+	  })
 	});
 	
-	var biomeLayer = new ol.layer.WebGLTile({
+	var biomeLayer = new ol.layer.Tile({
 	  visible: true,
 	  opacity: 0.8,
-	  source: new ol.source.GeoTIFF({ sources: [{ url: 'layers/mbiome.tif' }] })
+	  source: new ol.source.GeoTIFF({
+	    sources: [{ url: './layers/mbiome.tif' }]
+	  })
 	});
 	
-	var soilLayer = new ol.layer.WebGLTile({
+	var soilLayer = new ol.layer.Tile({
 	  visible: false,
 	  opacity: 0.8,
-	  source: new ol.source.GeoTIFF({ sources: [{ url: 'layers/soil.tif' }] })
+	  source: new ol.source.GeoTIFF({
+	    sources: [{ url: './layers/soil.tif' }]
+	  })
 	});
 	
-	var iceLayer = new ol.layer.WebGLTile({
+	var iceLayer = new ol.layer.Tile({
 	  visible: false,
 	  opacity: 0.9,
-	  source: new ol.source.GeoTIFF({ sources: [{ url: 'layers/icemask.tif' }] })
+	  source: new ol.source.GeoTIFF({
+	    sources: [{ url: './layers/ice.tif' }] // Verify exact filename in layers folder
+	  })
 	});
 	
-	var lakeLayer = new ol.layer.WebGLTile({
+	var lakeLayer = new ol.layer.Tile({
 	  visible: false,
 	  opacity: 0.9,
-	  source: new ol.source.GeoTIFF({ sources: [{ url: 'layers/lake.tif' }] })
+	  source: new ol.source.GeoTIFF({
+	    sources: [{ url: './layers/lake.tif' }]
+	  })
 	});
 	
-	// Insert GeoTIFF layers under vector overlays
-	map.getLayers().insertAt(0, lsmLayer);
-	map.getLayers().insertAt(1, topoLayer);
-	map.getLayers().insertAt(2, sstLayer);
-	map.getLayers().insertAt(3, biomeLayer);
-	map.getLayers().insertAt(4, soilLayer);
-	map.getLayers().insertAt(5, iceLayer);
-	map.getLayers().insertAt(6, lakeLayer);
+	// Add rasters to map stack
+	map.addLayer(lsmLayer);
+	map.addLayer(topoLayer);
+	map.addLayer(sstLayer);
+	map.addLayer(biomeLayer);
+	map.addLayer(soilLayer);
+	map.addLayer(iceLayer);
+	map.addLayer(lakeLayer);
 	
-	// Bind UI controls directly
+	// Bind UI Controls
 	function bindControl(chkId, opId, layer) {
 	  var checkbox = document.getElementById(chkId);
 	  var slider = document.getElementById(opId);
 	
 	  if (checkbox) {
-	    layer.setVisible(checkbox.checked);
 	    checkbox.addEventListener('change', function(e) {
 	      layer.setVisible(e.target.checked);
 	    });
 	  }
 	
 	  if (slider) {
-	    layer.setOpacity(parseFloat(slider.value));
 	    slider.addEventListener('input', function(e) {
 	      layer.setOpacity(parseFloat(e.target.value));
 	    });
@@ -861,21 +873,3 @@ document.addEventListener('DOMContentLoaded', function() {
 	bindControl('chk-soil', 'op-soil', soilLayer);
 	bindControl('chk-ice', 'op-ice', iceLayer);
 	bindControl('chk-lake', 'op-lake', lakeLayer);
-	
-	// Fossil Layer Toggle - Iterates through all map layers to find Vector points
-	var fossilChk = document.getElementById('chk-fossils');
-	if (fossilChk) {
-	  fossilChk.addEventListener('change', function(e) {
-	    map.getLayers().forEach(function(layer) {
-	      if (layer instanceof ol.layer.Group) {
-	        layer.getLayers().forEach(function(subLayer) {
-	          if (subLayer instanceof ol.layer.Vector) {
-	            subLayer.setVisible(e.target.checked);
-	          }
-	        });
-	      } else if (layer instanceof ol.layer.Vector) {
-	        layer.setVisible(e.target.checked);
-	      }
-	    });
-	  });
-	}
