@@ -24,41 +24,53 @@ function togglePanel(contentId, arrowId) {
     }
 }
 
-  <div id="coord-panel" class="map-panel">
-    <button class="panel-toggle-btn" onclick="togglePanel('coord-content', 'coord-arrow')">
-      <span>📍 Coordinate Tools</span>
-      <span id="coord-arrow">▼</span>
-    </button>
-    <div id="coord-content" class="panel-content">
-      <div id="coord-display" style="font-size: 12px; margin-bottom: 8px; color: #555;">Lat: --, Lon: --</div>
-      <div style="display: flex; gap: 4px;">
-        <input type="text" id="coord-input" placeholder="Lat, Lon (e.g. 15.5, 42.1)" style="flex: 1; padding: 4px 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px;">
-        <button id="coord-go-btn" style="padding: 4px 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Go</button>
-      </div>
-    </div>
-  </div>
+// EXACT LINES TO PASTE AFTER togglePanel IN qgis2web.js:
 
-  <!-- Paleoclimate Layers Panel -->
-  <div id="layer-panel" class="map-panel">
-    <button class="panel-toggle-btn" onclick="togglePanel('layer-content', 'layer-arrow')">
-      <span>🗺️ Paleoclimate Layers</span>
-      <span id="layer-arrow">▼</span>
-    </button>
-    <div id="layer-content" class="panel-content">
-      <div style="display: flex; flex-direction: column; gap: 8px;">
-        <label style="font-size: 13px;"><input type="checkbox" id="chk-fossils"> Fossil Occurrences</label>
-        <hr style="margin: 4px 0; border: none; border-top: 1px solid #eee;">
-        <div style="display: flex; align-items: center; justify-content: space-between;"><label style="font-size: 13px;"><input type="checkbox" id="chk-lsm"> Land-Sea Mask</label><input type="range" id="op-lsm" min="0" max="1" step="0.1" value="1" style="width: 80px;"></div>
-        <div style="display: flex; align-items: center; justify-content: space-between;"><label style="font-size: 13px;"><input type="checkbox" id="chk-topo"> Topography</label><input type="range" id="op-topo" min="0" max="1" step="0.1" value="0.8" style="width: 80px;"></div>
-        <div style="display: flex; align-items: center; justify-content: space-between;"><label style="font-size: 13px;"><input type="checkbox" id="chk-sst"> Sea Surface Temp</label><input type="range" id="op-sst" min="0" max="1" step="0.1" value="0.8" style="width: 80px;"></div>
-        <div style="display: flex; align-items: center; justify-content: space-between;"><label style="font-size: 13px;"><input type="checkbox" id="chk-biome"> Megabiomes</label><input type="range" id="op-biome" min="0" max="1" step="0.1" value="0.8" style="width: 80px;"></div>
-        <div style="display: flex; align-items: center; justify-content: space-between;"><label style="font-size: 13px;"><input type="checkbox" id="chk-soil"> Soil Types</label><input type="range" id="op-soil" min="0" max="1" step="0.1" value="0.8" style="width: 80px;"></div>
-        <div style="display: flex; align-items: center; justify-content: space-between;"><label style="font-size: 13px;"><input type="checkbox" id="chk-ice"> Ice Mask</label><input type="range" id="op-ice" min="0" max="1" step="0.1" value="0.9" style="width: 80px;"></div>
-        <div style="display: flex; align-items: center; justify-content: space-between;"><label style="font-size: 13px;"><input type="checkbox" id="chk-lake"> Lakes</label><input type="range" id="op-lake" min="0" max="1" step="0.1" value="0.9" style="width: 80px;"></div>
-      </div>
-    </div>
-  </div>
-</div>
+// --- Coordinate Jump Control ---
+document.getElementById('coord-go-btn').addEventListener('click', function() {
+    var inputVal = document.getElementById('coord-input').value.trim();
+    if (!inputVal) return;
+
+    var parts = inputVal.split(',').map(function(item) {
+        return parseFloat(item.trim());
+    });
+
+    if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+        var lat = parts[0];
+        var lon = parts[1];
+        
+        map.getView().animate({
+            center: [lon, lat],
+            zoom: 6,
+            duration: 1000
+        });
+    } else {
+        alert("Please enter valid coordinates in 'Lat, Lon' format (e.g., 15.5, 42.1)");
+    }
+});
+
+// --- Layer Visibility & Opacity Controls ---
+function setupLayerToggle(checkboxId, layerObj) {
+    var chk = document.getElementById(checkboxId);
+    if (chk && layerObj) {
+        chk.addEventListener('change', function() {
+            layerObj.setVisible(this.checked);
+        });
+    }
+}
+
+function setupLayerOpacity(sliderId, layerObj) {
+    var slider = document.getElementById(sliderId);
+    if (slider && layerObj) {
+        slider.addEventListener('input', function() {
+            layerObj.setOpacity(parseFloat(this.value));
+        });
+    }
+}
+
+// Attach listeners to active map layers
+setupLayerToggle('chk-topo', typeof lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 !== 'undefined' ? lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 : null);
+setupLayerOpacity('op-topo', typeof lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 !== 'undefined' ? lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 : null);
 
 //initial view - epsg:4326 coordinates
 map.getView().fit([-180.050000, -90.050000, 180.050000, 90.050000], map.getSize());
