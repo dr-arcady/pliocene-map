@@ -1021,31 +1021,57 @@ document.addEventListener('DOMContentLoaded', function() {
 	    }
 	}
 
-	// --- 1. Coordinate Jump Control ---
-	document.getElementById('coord-go-btn').addEventListener('click', function() {
-	    var inputVal = document.getElementById('coord-input').value.trim();
-	    if (!inputVal) return;
-	
-	    var parts = inputVal.split(',').map(function(item) {
-	        return parseFloat(item.trim());
-	    });
-	
-	    if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-	        var lat = parts[0];
-	        var lon = parts[1];
-	        
-	        // OpenLayers map in EPSG:4326 uses [Longitude, Latitude] order
-	        map.getView().animate({
-	            center: [lon, lat],
-	            zoom: 6,
-	            duration: 1000
-	        });
-	    } else {
-	        alert("Please enter valid coordinates in 'Lat, Lon' format (e.g., 15.5, 42.1)");
-	    }
+	// --- 1. Marker Layer Setup for Search Dot ---
+	var searchMarkerSource = new ol.source.Vector();
+	var searchMarkerLayer = new ol.layer.Vector({
+	    source: searchMarkerSource,
+	    style: new ol.style.Style({
+	        image: new ol.style.Circle({
+	            radius: 7,
+	            fill: new ol.style.Fill({ color: '#ff0000' }),
+	            stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
+	        })
+	    })
 	});
+	if (typeof map !== 'undefined') {
+	    map.addLayer(searchMarkerLayer);
+	}
 	
-	// --- 2. Layer Visibility & Opacity Helper Functions ---
+	// --- 2. Safe Coordinate Search Listener ---
+	var coordBtn = document.getElementById('coord-go-btn');
+	if (coordBtn) {
+	    coordBtn.addEventListener('click', function() {
+	        var inputVal = document.getElementById('coord-input').value.trim();
+	        if (!inputVal) return;
+	
+	        var parts = inputVal.split(',').map(function(item) {
+	            return parseFloat(item.trim());
+	        });
+	
+	        if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+	            var lat = parts[0];
+	            var lon = parts[1];
+	            var coord = [lon, lat];
+	
+	            // Animate map center
+	            map.getView().animate({
+	                center: coord,
+	                zoom: 6,
+	                duration: 1000
+	            });
+	
+	            // Draw temporary dot
+	            searchMarkerSource.clear();
+	            searchMarkerSource.addFeature(new ol.Feature({
+	                geometry: new ol.geom.Point(coord)
+	            }));
+	        } else {
+	            alert("Please enter valid coordinates in 'Lat, Lon' format (e.g., 15.5, 42.1)");
+	        }
+	    });
+	}
+	
+	// --- 3. Safe Helper Functions for Controls ---
 	function setupLayerToggle(checkboxId, layerObj) {
 	    var chk = document.getElementById(checkboxId);
 	    if (chk && layerObj) {
@@ -1064,32 +1090,12 @@ document.addEventListener('DOMContentLoaded', function() {
 	    }
 	}
 	
-	// --- 3. Attach Listeners to Active Map Layers ---
-	// Topography / PALEOMAP Base Layer
-	setupLayerToggle('chk-topo', typeof lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 !== 'undefined' ? lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 : null);
-	setupLayerOpacity('op-topo', typeof lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 !== 'undefined' ? lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 : null);
+	// --- 4. Safely Bind Active Layers ---
+	if (typeof lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 !== 'undefined') {
+	    setupLayerToggle('chk-topo', lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0);
+	    setupLayerOpacity('op-topo', lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0);
+	}
 	
-	// Fossil Occurrences Toggle (if loaded dynamically)
-	setupLayerToggle('chk-fossils', typeof pbdbVectorLayer !== 'undefined' ? pbdbVectorLayer : null);
-	
-	// Raster & Vector Layers (matching layers defined in layers.js)
-	setupLayerToggle('chk-lsm', typeof lyr_LSM !== 'undefined' ? lyr_LSM : null);
-	setupLayerOpacity('op-lsm', typeof lyr_LSM !== 'undefined' ? lyr_LSM : null);
-	
-	setupLayerToggle('chk-topo', typeof lyr_Topo !== 'undefined' ? lyr_Topo : null);
-	setupLayerOpacity('op-topo', typeof lyr_Topo !== 'undefined' ? lyr_Topo : null);
-	
-	setupLayerToggle('chk-sst', typeof lyr_SST !== 'undefined' ? lyr_SST : null);
-	setupLayerOpacity('op-sst', typeof lyr_SST !== 'undefined' ? lyr_SST : null);
-	
-	setupLayerToggle('chk-biome', typeof lyr_Biome !== 'undefined' ? lyr_Biome : null);
-	setupLayerOpacity('op-biome', typeof lyr_Biome !== 'undefined' ? lyr_Biome : null);
-	
-	setupLayerToggle('chk-soil', typeof lyr_Soil !== 'undefined' ? lyr_Soil : null);
-	setupLayerOpacity('op-soil', typeof lyr_Soil !== 'undefined' ? lyr_Soil : null);
-	
-	setupLayerToggle('chk-ice', typeof lyr_Ice !== 'undefined' ? lyr_Ice : null);
-	setupLayerOpacity('op-ice', typeof lyr_Ice !== 'undefined' ? lyr_Ice : null);
-	
-	setupLayerToggle('chk-lake', typeof lyr_Lake !== 'undefined' ? lyr_Lake : null);
-	setupLayerOpacity('op-lake', typeof lyr_Lake !== 'undefined' ? lyr_Lake : null);
+	if (typeof pbdbVectorLayer !== 'undefined') {
+	    setupLayerToggle('chk-fossils', pbdbVectorLayer);
+	}
