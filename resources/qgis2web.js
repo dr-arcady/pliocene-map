@@ -781,65 +781,65 @@ document.addEventListener('DOMContentLoaded', function() {
 	    }
 	});
 
-	// --- Updated GeoTIFF Layer Definitions ---
+	// --- GeoTIFF Layer Initialization ---
 
-	var lsmLayer = new ol.layer.Tile({
-	  visible: false,
+	var lsmLayer = new ol.layer.WebGLTile({
+	  visible: true,
 	  opacity: 1.0,
 	  source: new ol.source.GeoTIFF({
-	    sources: [{ url: './layers/lsm.tif' }]
+	    sources: [{ url: 'layers/lsm.tif' }]
 	  })
 	});
 	
-	var topoLayer = new ol.layer.Tile({
+	var topoLayer = new ol.layer.WebGLTile({
 	  visible: false,
 	  opacity: 0.8,
 	  source: new ol.source.GeoTIFF({
-	    sources: [{ url: './layers/topo.tif' }]
+	    sources: [{ url: 'layers/topo.tif' }]
 	  })
 	});
 	
-	var sstLayer = new ol.layer.Tile({
+	var sstLayer = new ol.layer.WebGLTile({
 	  visible: false,
 	  opacity: 0.8,
 	  source: new ol.source.GeoTIFF({
-	    sources: [{ url: './layers/sst.tif' }]
+	    sources: [{ url: 'layers/sst.tif' }]
 	  })
 	});
 	
-	var biomeLayer = new ol.layer.Tile({
-	  visible: true,
-	  opacity: 0.8,
-	  source: new ol.source.GeoTIFF({
-	    sources: [{ url: './layers/mbiome.tif' }]
-	  })
-	});
-	
-	var soilLayer = new ol.layer.Tile({
+	var biomeLayer = new ol.layer.WebGLTile({
 	  visible: false,
 	  opacity: 0.8,
 	  source: new ol.source.GeoTIFF({
-	    sources: [{ url: './layers/soil.tif' }]
+	    sources: [{ url: 'layers/mbiome.tif' }]
 	  })
 	});
 	
-	var iceLayer = new ol.layer.Tile({
+	var soilLayer = new ol.layer.WebGLTile({
+	  visible: false,
+	  opacity: 0.8,
+	  source: new ol.source.GeoTIFF({
+	    sources: [{ url: 'layers/soil.tif' }]
+	  })
+	});
+	
+	var iceLayer = new ol.layer.WebGLTile({
 	  visible: false,
 	  opacity: 0.9,
 	  source: new ol.source.GeoTIFF({
-	    sources: [{ url: './layers/ice.tif' }] // Verify exact filename in layers folder
+	    sources: [{ url: 'layers/icemask.tif' }]
 	  })
 	});
 	
-	var lakeLayer = new ol.layer.Tile({
+	var lakeLayer = new ol.layer.WebGLTile({
 	  visible: false,
 	  opacity: 0.9,
 	  source: new ol.source.GeoTIFF({
-	    sources: [{ url: './layers/lake.tif' }]
+	    sources: [{ url: 'layers/lake.tif' }]
 	  })
 	});
 	
-	// Add rasters to map stack
+	// Add layers to map
 	map.addLayer(lsmLayer);
 	map.addLayer(topoLayer);
 	map.addLayer(sstLayer);
@@ -848,18 +848,20 @@ document.addEventListener('DOMContentLoaded', function() {
 	map.addLayer(iceLayer);
 	map.addLayer(lakeLayer);
 	
-	// Bind UI Controls
+	// Bind Layer Control Panel UI
 	function bindControl(chkId, opId, layer) {
 	  var checkbox = document.getElementById(chkId);
 	  var slider = document.getElementById(opId);
 	
 	  if (checkbox) {
+	    layer.setVisible(checkbox.checked);
 	    checkbox.addEventListener('change', function(e) {
 	      layer.setVisible(e.target.checked);
 	    });
 	  }
 	
 	  if (slider) {
+	    layer.setOpacity(parseFloat(slider.value));
 	    slider.addEventListener('input', function(e) {
 	      layer.setOpacity(parseFloat(e.target.value));
 	    });
@@ -873,3 +875,21 @@ document.addEventListener('DOMContentLoaded', function() {
 	bindControl('chk-soil', 'op-soil', soilLayer);
 	bindControl('chk-ice', 'op-ice', iceLayer);
 	bindControl('chk-lake', 'op-lake', lakeLayer);
+	
+	// Fossil Occurrences Toggle
+	var fossilChk = document.getElementById('chk-fossils');
+	if (fossilChk) {
+	  fossilChk.addEventListener('change', function(e) {
+	    map.getLayers().forEach(function(layer) {
+	      if (layer instanceof ol.layer.Group) {
+	        layer.getLayers().forEach(function(subLayer) {
+	          if (subLayer instanceof ol.layer.Vector) {
+	            subLayer.setVisible(e.target.checked);
+	          }
+	        });
+	      } else if (layer instanceof ol.layer.Vector) {
+	        layer.setVisible(e.target.checked);
+	      }
+	    });
+	  });
+	}
