@@ -60,6 +60,65 @@ var majorLatitudesLayer = new ol.layer.Vector({
 });
 map.addLayer(majorLatitudesLayer);
 
+// 1. Mouse Coordinate Hover Display Control
+var mousePosControl = new ol.control.MousePosition({
+    coordinateFormat: function(coord) {
+        return 'Lat: ' + coord[1].toFixed(4) + '°, Lon: ' + coord[0].toFixed(4) + '°';
+    },
+    projection: 'EPSG:4326'
+});
+map.addControl(mousePosControl);
+
+// 2. Interactive Pin Pointer Layer
+var pinSource = new ol.source.Vector();
+var pinLayer = new ol.layer.Vector({
+    source: pinSource,
+    style: new ol.style.Style({
+        image: new ol.style.Circle({
+            radius: 8,
+            fill: new ol.style.Fill({ color: '#e74c3c' }),
+            stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
+        })
+    })
+});
+map.addLayer(pinLayer);
+
+// 3. UI Panel for Coordinate Jump & Pointer Entry
+var coordControlDiv = document.createElement('div');
+coordControlDiv.className = 'ol-control';
+coordControlDiv.style.cssText = 'top: 10px; right: 10px; background: rgba(0,0,0,0.75); color: #fff; padding: 8px 12px; border-radius: 6px; font-family: sans-serif; font-size: 13px; z-index: 1000; box-shadow: 0 2px 6px rgba(0,0,0,0.3);';
+coordControlDiv.innerHTML = `
+    <div style="margin-bottom: 6px; font-weight: bold; color: #ffd700;">Coordinate Tools</div>
+    <div id="coord-display" style="margin-bottom: 8px; font-size: 12px; color: #ddd;">Lat: --, Lon: --</div>
+    <div style="display: flex; gap: 4px;">
+        <input type="text" id="coord-input" placeholder="Lat, Lon (e.g. 15.5, 42.1)" style="width: 150px; padding: 4px 6px; border-radius: 4px; border: 1px solid #555; background: #222; color: #fff; font-size: 12px;">
+        <button id="coord-btn" style="padding: 4px 8px; border-radius: 4px; border: none; background: #3498db; color: #fff; cursor: pointer; font-size: 12px;">Go</button>
+    </div>
+`;
+document.body.appendChild(coordControlDiv);
+
+// Link OpenLayers MousePosition to UI panel display
+mousePosControl.setTarget(document.getElementById('coord-display'));
+
+// Coordinate Jump execution
+document.getElementById('coord-btn').addEventListener('click', function() {
+    var inputVal = document.getElementById('coord-input').value.trim();
+    var parts = inputVal.split(',').map(function(item) { return parseFloat(item.trim()); });
+    if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+        var lat = parts[0];
+        var lon = parts[1];
+        var coords = [lon, lat];
+        pinSource.clear();
+        var pinFeature = new ol.Feature({
+            geometry: new ol.geom.Point(coords)
+        });
+        pinSource.addFeature(pinFeature);
+        map.getView().animate({ center: coords, zoom: 5, duration: 800 });
+    } else {
+        alert('Please enter coordinates in "Latitude, Longitude" format (e.g., 15.5, 42.1)');
+    }
+});
+
 //change cursor
 function pointerOnFeature(evt) {
     if (evt.dragging) {
