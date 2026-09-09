@@ -1094,16 +1094,19 @@ document.addEventListener('DOMContentLoaded', function() {
 	});
 	map.addLayer(pbdbVectorLayer);
 	
-	// Fetch Pliocene Fossils from PBDB (Respects UI Checkbox State)
-	fetch('https://paleobiodb.org/data1.2/occs/list.json?interval=Pliocene&show=coords')
+	// Fetch Pliocene Fossils from PBDB (Attaches full record attributes for popups)
+	fetch('https://paleobiodb.org/data1.2/occs/list.json?interval=Pliocene&show=coords,full')
 	    .then(function(res) { return res.json(); })
 	    .then(function(data) {
 	        if (data && data.records) {
 	            var features = data.records.map(function(rec) {
 	                if (rec.lng && rec.lat) {
-	                    return new ol.Feature({
+	                    var feat = new ol.Feature({
 	                        geometry: new ol.geom.Point([rec.lng, rec.lat])
 	                    });
+	                    // Attach raw record attributes to feature properties
+	                    feat.setProperties(rec);
+	                    return feat;
 	                }
 	            }).filter(Boolean);
 	            fossilSource.addFeatures(features);
