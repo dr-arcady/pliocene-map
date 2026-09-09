@@ -749,21 +749,34 @@ document.addEventListener('DOMContentLoaded', function() {
 	    return false;
 	};
 	
+	// Change mouse cursor to a pointer when hovering over a fossil dot
+	map.on('pointermove', function(e) {
+	    var hit = map.hasFeatureAtPixel(e.pixel, { hitTolerance: 5 });
+	    map.getTargetElement().style.cursor = hit ? 'pointer' : '';
+	});
+	
 	// Click Event Handler for Vector Features
 	map.on('singleclick', function(evt) {
 	    var feature = map.forEachFeatureAtPixel(evt.pixel, function(feat) {
 	        return feat;
-	    });
+	    }, { hitTolerance: 5 });
 	
 	    if (feature) {
 	        var props = feature.getProperties();
-	        var name = props.accepted_name || props.taxon_name || 'Unknown Specimen';
-	        var taxonClass = props.class || props.phylum || 'N/A';
-	        var env = props.environment || 'N/A';
+	        console.log('Clicked Feature Attributes:', props);
+	        
+	        var keys = Object.keys(props).filter(function(k) { return k !== 'geometry'; });
+	        var bodyText = '';
+	        
+	        if (keys.length > 0) {
+	            keys.forEach(function(key) {
+	                bodyText += '<b>' + key + ':</b> ' + props[key] + '<br>';
+	            });
+	        } else {
+	            bodyText = '<em>No attribute details found.</em>';
+	        }
 	
-	        content.innerHTML = '<strong>' + name + '</strong><br>' +
-	                            '<b>Class/Taxon:</b> ' + taxonClass + '<br>' +
-	                            '<b>Environment:</b> ' + env;
+	        content.innerHTML = bodyText;
 	        overlay.setPosition(evt.coordinate);
 	    } else {
 	        overlay.setPosition(undefined);
