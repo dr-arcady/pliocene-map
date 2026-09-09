@@ -1021,23 +1021,21 @@ document.addEventListener('DOMContentLoaded', function() {
 	    }
 	}
 
-	// --- 1. Marker Layer Setup for Search Dot ---
+	// --- 1. Coordinate Marker Vector Layer ---
 	var searchMarkerSource = new ol.source.Vector();
 	var searchMarkerLayer = new ol.layer.Vector({
 	    source: searchMarkerSource,
 	    style: new ol.style.Style({
 	        image: new ol.style.Circle({
-	            radius: 7,
+	            radius: 8,
 	            fill: new ol.style.Fill({ color: '#ff0000' }),
 	            stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
 	        })
 	    })
 	});
-	if (typeof map !== 'undefined') {
-	    map.addLayer(searchMarkerLayer);
-	}
+	map.addLayer(searchMarkerLayer);
 	
-	// --- 2. Safe Coordinate Search Listener ---
+	// --- 2. Safe Coordinate Jump Handler ---
 	var coordBtn = document.getElementById('coord-go-btn');
 	if (coordBtn) {
 	    coordBtn.addEventListener('click', function() {
@@ -1053,49 +1051,73 @@ document.addEventListener('DOMContentLoaded', function() {
 	            var lon = parts[1];
 	            var coord = [lon, lat];
 	
-	            // Animate map center
 	            map.getView().animate({
 	                center: coord,
 	                zoom: 6,
 	                duration: 1000
 	            });
 	
-	            // Draw temporary dot
 	            searchMarkerSource.clear();
 	            searchMarkerSource.addFeature(new ol.Feature({
 	                geometry: new ol.geom.Point(coord)
 	            }));
 	        } else {
-	            alert("Please enter valid coordinates in 'Lat, Lon' format (e.g., 15.5, 42.1)");
+	            alert("Please enter valid coordinates (e.g., 15.5, 35.7)");
 	        }
 	    });
 	}
 	
-	// --- 3. Safe Helper Functions for Controls ---
-	function setupLayerToggle(checkboxId, layerObj) {
-	    var chk = document.getElementById(checkboxId);
-	    if (chk && layerObj) {
-	        chk.addEventListener('change', function() {
-	            layerObj.setVisible(this.checked);
-	        });
+	// --- 3. Dynamic PBDB Fossil Layer ---
+	var fossilSource = new ol.source.Vector();
+	var pbdbVectorLayer = new ol.layer.Vector({
+	    source: fossilSource,
+	    style: new ol.style.Style({
+	        image: new ol.style.Circle({
+	            radius: 5,
+	            fill: new ol.style.Fill({ color: '#e67e22' }),
+	            stroke: new ol.style.Stroke({ color: '#2c3e50', width: 1 })
+	        })
+	    })
+	});
+	map.addLayer(pbdbVectorLayer);
+	
+	// Fetch Pliocene Fossils from PBDB
+	fetch('https://paleobiodb.org/data1.2/occs/list.json?interval=Pliocene&show=coords')
+	    .then(function(res) { return res.json(); })
+	    .then(function(data) {
+	        if (data && data.records) {
+	            var features = data.records.map(function(rec) {
+	                if (rec.lng && rec.lat) {
+	                    return new ol.Feature({
+	                        geometry: new ol.geom.Point([rec.lng, rec.lat])
+	                    });
+	                }
+	            }).filter(Boolean);
+	            fossilSource.addFeatures(features);
+	        }
+	    });
+	
+	// --- 4. Layer Visibility Control Helper ---
+	function bindControl(elementId, eventType, callback) {
+	    var el = document.getElementById(elementId);
+	    if (el) {
+	        el.addEventListener(eventType, callback);
 	    }
 	}
 	
-	function setupLayerOpacity(sliderId, layerObj) {
-	    var slider = document.getElementById(sliderId);
-	    if (slider && layerObj) {
-	        slider.addEventListener('input', function() {
-	            layerObj.setOpacity(parseFloat(this.value));
-	        });
+	// Bind Topography
+	bindControl('chk-topo', 'change', function() {
+	    if (typeof lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 !== 'undefined') {
+	        lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0.setVisible(this.checked);
 	    }
-	}
+	});
+	bindControl('op-topo', 'input', function() {
+	    if (typeof lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 !== 'undefined') {
+	        lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0.setOpacity(parseFloat(this.value));
+	    }
+	});
 	
-	// --- 4. Safely Bind Active Layers ---
-	if (typeof lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 !== 'undefined') {
-	    setupLayerToggle('chk-topo', lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0);
-	    setupLayerOpacity('op-topo', lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0);
-	}
-	
-	if (typeof pbdbVectorLayer !== 'undefined') {
-	    setupLayerToggle('chk-fossils', pbdbVectorLayer);
-	}
+	// Bind Fossils
+	bindControl('chk-fossils', 'change', function() {
+	    pbdbVectorLayer.setVisible(this.checked);
+	});
