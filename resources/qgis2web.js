@@ -10,7 +10,44 @@ var map = new ol.Map({
         minZoom: 1,
         
     })
-});
+});<!-- EXACT LINES TO REPLACE WITH -->
+<div class="right-controls-wrapper">
+  <!-- Coordinate Tools Panel -->
+  <div id="coord-panel" class="map-panel">
+    <button class="panel-toggle-btn" onclick="togglePanel('coord-content', 'coord-arrow')">
+      <span>📍 Coordinate Tools</span>
+      <span id="coord-arrow">▼</span>
+    </button>
+    <div id="coord-content" class="panel-content">
+      <div id="coord-display" style="font-size: 12px; margin-bottom: 8px; color: #555;">Lat: --, Lon: --</div>
+      <div style="display: flex; gap: 4px;">
+        <input type="text" id="coord-input" placeholder="Lat, Lon (e.g. 15.5, 42.1)" style="flex: 1; padding: 4px 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px;">
+        <button id="coord-go-btn" style="padding: 4px 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Go</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Paleoclimate Layers Panel -->
+  <div id="layer-panel" class="map-panel">
+    <button class="panel-toggle-btn" onclick="togglePanel('layer-content', 'layer-arrow')">
+      <span>🗺️ Paleoclimate Layers</span>
+      <span id="layer-arrow">▼</span>
+    </button>
+    <div id="layer-content" class="panel-content">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <label style="font-size: 13px;"><input type="checkbox" id="chk-fossils"> Fossil Occurrences</label>
+        <hr style="margin: 4px 0; border: none; border-top: 1px solid #eee;">
+        <div style="display: flex; align-items: center; justify-content: space-between;"><label style="font-size: 13px;"><input type="checkbox" id="chk-lsm"> Land-Sea Mask</label><input type="range" id="op-lsm" min="0" max="1" step="0.1" value="1" style="width: 80px;"></div>
+        <div style="display: flex; align-items: center; justify-content: space-between;"><label style="font-size: 13px;"><input type="checkbox" id="chk-topo"> Topography</label><input type="range" id="op-topo" min="0" max="1" step="0.1" value="0.8" style="width: 80px;"></div>
+        <div style="display: flex; align-items: center; justify-content: space-between;"><label style="font-size: 13px;"><input type="checkbox" id="chk-sst"> Sea Surface Temp</label><input type="range" id="op-sst" min="0" max="1" step="0.1" value="0.8" style="width: 80px;"></div>
+        <div style="display: flex; align-items: center; justify-content: space-between;"><label style="font-size: 13px;"><input type="checkbox" id="chk-biome"> Megabiomes</label><input type="range" id="op-biome" min="0" max="1" step="0.1" value="0.8" style="width: 80px;"></div>
+        <div style="display: flex; align-items: center; justify-content: space-between;"><label style="font-size: 13px;"><input type="checkbox" id="chk-soil"> Soil Types</label><input type="range" id="op-soil" min="0" max="1" step="0.1" value="0.8" style="width: 80px;"></div>
+        <div style="display: flex; align-items: center; justify-content: space-between;"><label style="font-size: 13px;"><input type="checkbox" id="chk-ice"> Ice Mask</label><input type="range" id="op-ice" min="0" max="1" step="0.1" value="0.9" style="width: 80px;"></div>
+        <div style="display: flex; align-items: center; justify-content: space-between;"><label style="font-size: 13px;"><input type="checkbox" id="chk-lake"> Lakes</label><input type="range" id="op-lake" min="0" max="1" step="0.1" value="0.9" style="width: 80px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 //initial view - epsg:4326 coordinates
 map.getView().fit([-180.050000, -90.050000, 180.050000, 90.050000], map.getSize());
@@ -82,20 +119,6 @@ var pinLayer = new ol.layer.Vector({
     })
 });
 map.addLayer(pinLayer);
-
-// 3. UI Panel for Coordinate Jump & Pointer Entry
-var coordControlDiv = document.createElement('div');
-coordControlDiv.className = 'ol-control';
-coordControlDiv.style.cssText = 'top: 10px; right: 10px; background: rgba(0,0,0,0.75); color: #fff; padding: 8px 12px; border-radius: 6px; font-family: sans-serif; font-size: 13px; z-index: 1000; box-shadow: 0 2px 6px rgba(0,0,0,0.3);';
-coordControlDiv.innerHTML = `
-    <div style="margin-bottom: 6px; font-weight: bold; color: #ffd700;">Coordinate Tools</div>
-    <div id="coord-display" style="margin-bottom: 8px; font-size: 12px; color: #ddd;">Lat: --, Lon: --</div>
-    <div style="display: flex; gap: 4px;">
-        <input type="text" id="coord-input" placeholder="Lat, Lon (e.g. 15.5, 42.1)" style="width: 150px; padding: 4px 6px; border-radius: 4px; border: 1px solid #555; background: #222; color: #fff; font-size: 12px;">
-        <button id="coord-btn" style="padding: 4px 8px; border-radius: 4px; border: none; background: #3498db; color: #fff; cursor: pointer; font-size: 12px;">Go</button>
-    </div>
-`;
-document.body.appendChild(coordControlDiv);
 
 // Link OpenLayers MousePosition to UI panel display
 mousePosControl.setTarget(document.getElementById('coord-display'));
@@ -730,6 +753,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	    title: 'Pliocene Fossil Occurrences'
 	});
 	map.addLayer(pbdbVectorLayer);
+	pbdbVectorLayer.setZIndex(9999);
 
 	// Custom Fossil Popup Overlay
 	var container = document.getElementById('fossil-popup');
@@ -902,11 +926,11 @@ document.addEventListener('DOMContentLoaded', function() {
 	
 	var currentClickedCoords = "";
 	
+	// EXACT LINES TO REPLACE WITH
 	map.on('singleclick', function (evt) {
 	  var fossilChk = document.getElementById('chk-fossils');
 	  var fossilsVisible = fossilChk ? fossilChk.checked : false;
 	  
-	  // Fix 3: Check if a fossil feature was clicked ONLY when fossil layer is active
 	  var featureFound = false;
 	  if (fossilsVisible) {
 	    featureFound = map.forEachFeatureAtPixel(evt.pixel, function (feature) {
@@ -914,14 +938,18 @@ document.addEventListener('DOMContentLoaded', function() {
 	    });
 	  }
 	
-	  // Fix 3 & 4: If fossil checkbox is OFF or no fossil point was clicked, display map coordinates popup
 	  if (!featureFound) {
-	    var coord = ol.proj.toLonLat(evt.coordinate);
-	    var lon = coord[0].toFixed(4);
-	    var lat = coord[1].toFixed(4);
+	    var mapProjection = map.getView().getProjection();
+	    var geoCoord = ol.proj.transform(evt.coordinate, mapProjection, 'EPSG:4326');
+	    var lon = geoCoord[0].toFixed(4);
+	    var lat = geoCoord[1].toFixed(4);
 	    
+	    currentClickedCoords = lat + "° N, " + lon + "° E";
+	    if (lat < 0) currentClickedCoords = Math.abs(lat) + "° S, " + (lon < 0 ? Math.abs(lon) + "° W" : lon + "° E");
+	    else if (lon < 0) currentClickedCoords = lat + "° N, " + Math.abs(lon) + "° W";
+	
+	    document.getElementById('popup-coord-text').innerText = lat + ", " + lon;
 	    currentClickedCoords = lat + ", " + lon;
-	    document.getElementById('popup-coord-text').innerText = currentClickedCoords;
 	    
 	    popupElement.style.display = 'flex';
 	    popupOverlay.setPosition(evt.coordinate);
