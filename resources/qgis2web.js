@@ -780,3 +780,82 @@ document.addEventListener('DOMContentLoaded', function() {
 	        overlay.setPosition(undefined);
 	    }
 	});
+
+	// --- Paleoclimate WebGL GeoTIFF Layers ---
+	
+	var lsmLayer = new ol.layer.WebGLTile({
+	  visible: false,
+	  opacity: 1.0,
+	  source: new ol.source.GeoTIFF({ sources: [{ url: 'layers/lsm.tif' }] })
+	});
+	
+	var topoLayer = new ol.layer.WebGLTile({
+	  visible: false,
+	  opacity: 0.8,
+	  source: new ol.source.GeoTIFF({ sources: [{ url: 'layers/topo.tif' }] })
+	});
+	
+	var sstLayer = new ol.layer.WebGLTile({
+	  visible: false,
+	  opacity: 0.8,
+	  source: new ol.source.GeoTIFF({ sources: [{ url: 'layers/sst.tif' }] })
+	});
+	
+	var biomeLayer = new ol.layer.WebGLTile({
+	  visible: false,
+	  opacity: 0.8,
+	  source: new ol.source.GeoTIFF({ sources: [{ url: 'layers/mbiome.tif' }] })
+	});
+	
+	var soilLayer = new ol.layer.WebGLTile({
+	  visible: true,
+	  opacity: 0.8,
+	  source: new ol.source.GeoTIFF({ sources: [{ url: 'layers/soil.tif' }] })
+	});
+	
+	var iceLayer = new ol.layer.WebGLTile({
+	  visible: false,
+	  opacity: 0.9,
+	  source: new ol.source.GeoTIFF({ sources: [{ url: 'layers/icemask.tif' }] })
+	});
+	
+	var lakeLayer = new ol.layer.WebGLTile({
+	  visible: false,
+	  opacity: 0.9,
+	  source: new ol.source.GeoTIFF({ sources: [{ url: 'layers/lake.tif' }] })
+	});
+	
+	// Add rasters to map
+	map.addLayer(lsmLayer);
+	map.addLayer(topoLayer);
+	map.addLayer(sstLayer);
+	map.addLayer(biomeLayer);
+	map.addLayer(soilLayer);
+	map.addLayer(iceLayer);
+	map.addLayer(lakeLayer);
+	
+	// Bind UI controls
+	function setupLayerControl(chkId, opId, layer) {
+	  var checkbox = document.getElementById(chkId);
+	  var slider = document.getElementById(opId);
+	
+	  if (checkbox) {
+	    checkbox.addEventListener('change', function(e) {
+	      layer.setVisible(e.target.checked);
+	    });
+	  }
+	
+	  if (slider) {
+	    slider.addEventListener('input', function(e) {
+	      layer.setOpacity(parseFloat(e.target.value));
+	    });
+	  }
+	}
+	
+	setupLayerControl('chk-lsm', 'op-lsm', lsmLayer);
+	setupLayerControl('chk-topo', 'op-topo', topoLayer);
+	setupLayerControl('chk-sst', 'op-sst', sstLayer);
+	setupLayerControl('chk-biome', 'op-biome', biomeLayer);
+	setupLayerControl('chk-soil', 'op-soil', soilLayer);
+	setupLayerControl('chk-ice', 'op-ice', iceLayer);
+	setupLayerControl('chk-lake', 'op-lake', lakeLayer);
