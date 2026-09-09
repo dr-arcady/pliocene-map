@@ -1008,3 +1008,72 @@ document.addEventListener('DOMContentLoaded', function() {
 	        if (arrow) arrow.textContent = "▼";
 	    }
 	}
+
+	// --- 1. Coordinate Jump Control ---
+	document.getElementById('coord-go-btn').addEventListener('click', function() {
+	    var inputVal = document.getElementById('coord-input').value.trim();
+	    if (!inputVal) return;
+	
+	    var parts = inputVal.split(',').map(function(item) {
+	        return parseFloat(item.trim());
+	    });
+	
+	    if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+	        var lat = parts[0];
+	        var lon = parts[1];
+	        
+	        // OpenLayers map in EPSG:4326 uses [Longitude, Latitude] order
+	        map.getView().animate({
+	            center: [lon, lat],
+	            zoom: 6,
+	            duration: 1000
+	        });
+	    } else {
+	        alert("Please enter valid coordinates in 'Lat, Lon' format (e.g., 15.5, 42.1)");
+	    }
+	});
+	
+	// --- 2. Layer Visibility & Opacity Helper Functions ---
+	function setupLayerToggle(checkboxId, layerObj) {
+	    var chk = document.getElementById(checkboxId);
+	    if (chk && layerObj) {
+	        chk.addEventListener('change', function() {
+	            layerObj.setVisible(this.checked);
+	        });
+	    }
+	}
+	
+	function setupLayerOpacity(sliderId, layerObj) {
+	    var slider = document.getElementById(sliderId);
+	    if (slider && layerObj) {
+	        slider.addEventListener('input', function() {
+	            layerObj.setOpacity(parseFloat(this.value));
+	        });
+	    }
+	}
+	
+	// --- 3. Attach Listeners to Specific Map Layers ---
+	// Fossil Occurrences Toggle
+	setupLayerToggle('chk-fossils', typeof pbdbVectorLayer !== 'undefined' ? pbdbVectorLayer : null);
+	
+	// Raster & Vector Layers (matching layers defined in layers.js)
+	setupLayerToggle('chk-lsm', typeof lyr_LSM !== 'undefined' ? lyr_LSM : null);
+	setupLayerOpacity('op-lsm', typeof lyr_LSM !== 'undefined' ? lyr_LSM : null);
+	
+	setupLayerToggle('chk-topo', typeof lyr_Topo !== 'undefined' ? lyr_Topo : null);
+	setupLayerOpacity('op-topo', typeof lyr_Topo !== 'undefined' ? lyr_Topo : null);
+	
+	setupLayerToggle('chk-sst', typeof lyr_SST !== 'undefined' ? lyr_SST : null);
+	setupLayerOpacity('op-sst', typeof lyr_SST !== 'undefined' ? lyr_SST : null);
+	
+	setupLayerToggle('chk-biome', typeof lyr_Biome !== 'undefined' ? lyr_Biome : null);
+	setupLayerOpacity('op-biome', typeof lyr_Biome !== 'undefined' ? lyr_Biome : null);
+	
+	setupLayerToggle('chk-soil', typeof lyr_Soil !== 'undefined' ? lyr_Soil : null);
+	setupLayerOpacity('op-soil', typeof lyr_Soil !== 'undefined' ? lyr_Soil : null);
+	
+	setupLayerToggle('chk-ice', typeof lyr_Ice !== 'undefined' ? lyr_Ice : null);
+	setupLayerOpacity('op-ice', typeof lyr_Ice !== 'undefined' ? lyr_Ice : null);
+	
+	setupLayerToggle('chk-lake', typeof lyr_Lake !== 'undefined' ? lyr_Lake : null);
+	setupLayerOpacity('op-lake', typeof lyr_Lake !== 'undefined' ? lyr_Lake : null);
