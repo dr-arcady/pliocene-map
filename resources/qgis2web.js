@@ -877,6 +877,68 @@ document.addEventListener('DOMContentLoaded', function() {
 	bindControl('chk-ice', 'op-ice', iceLayer);
 	bindControl('chk-lake', 'op-lake', lakeLayer);
 	
+	// --- Fix 2: Panel Toggle Handler ---
+	function togglePanel(contentId, arrowId) {
+	  var content = document.getElementById(contentId);
+	  var arrow = document.getElementById(arrowId);
+	  if (content.classList.contains('active')) {
+	    content.classList.remove('active');
+	    arrow.textContent = '▼';
+	  } else {
+	    content.classList.add('active');
+	    arrow.textContent = '▲';
+	  }
+	}
+	
+	// --- Fix 4: Click Map to Pop Out Coordinates with Copy Button ---
+	var popupElement = document.getElementById('click-coord-popup');
+	var popupOverlay = new ol.Overlay({
+	  element: popupElement,
+	  positioning: 'bottom-center',
+	  stopEvent: true,
+	  offset: [0, -10]
+	});
+	map.addOverlay(popupOverlay);
+	
+	var currentClickedCoords = "";
+	
+	map.on('singleclick', function (evt) {
+	  var fossilChk = document.getElementById('chk-fossils');
+	  var fossilsVisible = fossilChk ? fossilChk.checked : false;
+	  
+	  // Fix 3: Check if a fossil feature was clicked ONLY when fossil layer is active
+	  var featureFound = false;
+	  if (fossilsVisible) {
+	    featureFound = map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+	      return true;
+	    });
+	  }
+	
+	  // Fix 3 & 4: If fossil checkbox is OFF or no fossil point was clicked, display map coordinates popup
+	  if (!featureFound) {
+	    var coord = ol.proj.toLonLat(evt.coordinate);
+	    var lon = coord[0].toFixed(4);
+	    var lat = coord[1].toFixed(4);
+	    
+	    currentClickedCoords = lat + ", " + lon;
+	    document.getElementById('popup-coord-text').innerText = currentClickedCoords;
+	    
+	    popupElement.style.display = 'flex';
+	    popupOverlay.setPosition(evt.coordinate);
+	  }
+	});
+	
+	// Copy Function
+	function copyCoordinates() {
+	  if (currentClickedCoords) {
+	    navigator.clipboard.writeText(currentClickedCoords).then(function() {
+	      var copyBtn = document.querySelector('.coord-copy-btn');
+	      copyBtn.innerText = "Copied!";
+	      setTimeout(function() { copyBtn.innerText = "Copy"; }, 1500);
+	    });
+	  }
+	}
+	
 	// Fossil Occurrences Toggle
 	var fossilChk = document.getElementById('chk-fossils');
 	if (fossilChk) {
