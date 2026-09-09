@@ -1094,78 +1094,92 @@ document.addEventListener('DOMContentLoaded', function() {
 	});
 	map.addLayer(pbdbVectorLayer);
 	
-	// Fetch Pliocene Fossils from PBDB (Attaches full record attributes for popups)
-	fetch('https://paleobiodb.org/data1.2/occs/list.json?interval=Pliocene&show=coords,full')
+	// Helper functions for loading visual
+	function showSpinner(msg) {
+	    var sp = document.getElementById('loading-spinner');
+	    var txt = document.getElementById('spinner-text');
+	    if (sp && txt) { txt.innerText = msg; sp.style.display = 'block'; }
+	}
+	function hideSpinner() {
+	    var sp = document.getElementById('loading-spinner');
+	    if (sp) { sp.style.display = 'none'; }
+	}
+
+	// Optimized PBDB Fetch (Lightweight attributes + loader)
+	showSpinner('Fetching Pliocene Fossils (~10k points)...');
+	fetch('https://paleobiodb.org/data1.2/occs/list.json?interval=Pliocene&show=coords,ident')
 	    .then(function(res) { return res.json(); })
 	    .then(function(data) {
 	        if (data && data.records) {
-	            var features = data.records.map(function(rec) {
-	                if (rec.lng && rec.lat) {
+	            var features = [];
+	            for (var i = 0; i < data.records.length; i++) {
+	                var rec = data.records[i];
+	                if (rec.lng !== undefined && rec.lat !== undefined) {
 	                    var feat = new ol.Feature({
 	                        geometry: new ol.geom.Point([rec.lng, rec.lat])
 	                    });
-	                    // Attach raw record attributes to feature properties
-	                    feat.setProperties(rec);
-	                    return feat;
+	                    feat.setProperties({
+	                        tna: rec.tna || rec.nam || 'Fossil Occurrence',
+	                        oid: rec.oid || rec.cid || 'N/A'
+	                    });
+	                    features.push(feat);
 	                }
-	            }).filter(Boolean);
+	            }
 	            fossilSource.addFeatures(features);
 	            
-	            // Sync visibility immediately after features load
 	            var fossilChk = document.getElementById('chk-fossils');
 	            if (fossilChk && typeof pbdbVectorLayer !== 'undefined') {
 	                pbdbVectorLayer.setVisible(fossilChk.checked);
 	            }
 	        }
+	        hideSpinner();
+	    })
+	    .catch(function(err) {
+	        console.error('PBDB Load Error:', err);
+	        hideSpinner();
 	    });
 
-// --- Master Map Click Handler (Fossil Data & Coordinates) ---
+// --- Responsive Master Map Click Handler ---
 map.on('singleclick', function(evt) {
-    var clickedFeature = null;
-
-    // Detect if a feature from the fossil layer was clicked
-    map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
-        if (feature && feature.get('tna')) {
-            clickedFeature = feature;
-            return true;
-        }
-    });
-
     var popupTextElem = document.getElementById('popup-coord-text');
     var popupElem = document.getElementById('popup');
 
-    if (clickedFeature) {
-        var props = clickedFeature.getProperties();
-        var taxonName = props.tna || props.name || 'Fossil Occurrence';
-        var recordId = props.oid || props.occurrence_no || 'N/A';
-        var lat = evt.coordinate[1].toFixed(4);
-        var lon = evt.coordinate[0].toFixed(4);
+    // Show immediate feedback
+    if (popupOverlay) popupOverlay.setPosition(evt.coordinate);
+    if (popupElem) popupElem.style.display = 'flex';
+    if (popupTextElem) popupTextElem.innerText = 'Reading point data...';
 
-        // Display fossil attributes inside popup
-        if (popupTextElem) {
-            popupTextElem.innerHTML = '<b>' + taxonName + '</b><br>ID: ' + recordId + '<br>Coords: ' + lat + ', ' + lon;
+    // Fast feature detection using requestAnimationFrame
+    requestAnimationFrame(function() {
+        var clickedFeature = null;
+        map.forEachFeatureAtPixel(evt.pixel, function(feature) {
+            if (feature && feature.get('tna')) {
+                clickedFeature = feature;
+                return true;
+            }
+        });
+
+        if (clickedFeature) {
+            var props = clickedFeature.getProperties();
+            var taxonName = props.tna || 'Fossil Occurrence';
+            var recordId = props.oid || 'N/A';
+            var lat = evt.coordinate[1].toFixed(4);
+            var lon = evt.coordinate[0].toFixed(4);
+
+            if (popupTextElem) {
+                popupTextElem.innerHTML = '<b>' + taxonName + '</b><br>ID: ' + recordId + '<br>Coords: ' + lat + ', ' + lon;
+            }
+        } else {
+            var lon = evt.coordinate[0].toFixed(4);
+            var lat = evt.coordinate[1].toFixed(4);
+            if (popupTextElem) {
+                popupTextElem.innerText = lat + ", " + lon;
+            }
         }
-    } else {
-        // Display plain coordinates when clicking empty space
-        var lon = evt.coordinate[0].toFixed(4);
-        var lat = evt.coordinate[1].toFixed(4);
-        if (popupTextElem) {
-            popupTextElem.innerText = lat + ", " + lon;
-        }
-    }
+    });
 
-    // Display popup at click position
-    if (popupOverlay) {
-        popupOverlay.setPosition(evt.coordinate);
-    }
-    if (popupElem) {
-        popupElem.style.display = 'flex';
-    }
-
-    // Automatically hide after 5 seconds
-    if (window.coordPopupTimeout) {
-        clearTimeout(window.coordPopupTimeout);
-    }
+    // Auto dismiss after 5s
+    if (window.coordPopupTimeout) clearTimeout(window.coordPopupTimeout);
     window.coordPopupTimeout = setTimeout(function() {
         if (popupElem) popupElem.style.display = 'none';
         if (popupOverlay) popupOverlay.setPosition(undefined);
