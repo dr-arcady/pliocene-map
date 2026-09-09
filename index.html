@@ -164,6 +164,15 @@
 
         <script src="resources/qgis2web_expressions.js"></script>
         <script src="./resources/functions.js"></script>
+
+        <!-- loading overlay -->
+        <div id="loading-spinner" style="display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:999999; background:rgba(0,0,0,0.8); color:#fff; padding:10px 18px; border-radius:20px; font-family:sans-serif; font-size:13px; font-weight:bold; box-shadow:0 2px 10px rgba(0,0,0,0.3);">
+            <span style="display:inline-block; animation:spin 1s linear infinite; margin-right:8px;">⏳</span> <span id="spinner-text">Loading fossil data...</span>
+        </div>
+        
+        <style>
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        </style>
         
         <!-- GeoTIFF Decoder Library -->
         <script src="https://cdn.jsdelivr.net/npm/geotiff"></script>
