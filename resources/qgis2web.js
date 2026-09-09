@@ -786,7 +786,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	});
 	
 	var pbdbVectorLayer = new ol.layer.Vector({
-	    source: pbdbVectorSource,
+	    visible: false,
+		source: pbdbVectorSource,
 	    style: new ol.style.Style({
 	        image: new ol.style.Circle({
 	            radius: 5,
