@@ -44,6 +44,30 @@
         }
         </style>
         <title></title>
+        <style>
+            .ol-popup {
+                position: absolute;
+                background-color: white;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+                padding: 15px;
+                border-radius: 8px;
+                border: 1px solid #cccccc;
+                bottom: 12px;
+                left: -50px;
+                min-width: 200px;
+            }
+            .ol-popup-closer {
+                text-decoration: none;
+                position: absolute;
+                top: 2px;
+                right: 8px;
+                color: #999;
+                font-weight: bold;
+            }
+            .ol-popup-closer:after {
+                content: "✖";
+            }
+        </style>
     </head>
     <body>
         <div id="map">
@@ -51,6 +75,10 @@
                 <a href="#" id="popup-closer" class="ol-popup-closer"></a>
                 <div id="popup-content"></div>
             </div>
+        </div>
+        <div id="popup" class="ol-popup">
+            <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+            <div id="popup-content"></div>
         </div>
         <script src="resources/qgis2web_expressions.js"></script>
         <script src="./resources/functions.js"></script>
