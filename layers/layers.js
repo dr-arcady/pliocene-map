@@ -1,24 +1,34 @@
+// REPLACE ENTIRE CONTENTS OF layers/layers.js WITH THIS:
+
 var wms_layers = [];
 
-var lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 = new ol.layer.Image({
-        opacity: 1,
-        
-    title: 'Map03_PALEOMAP_6min_Pliocene_5Ma<br />\
-    <img src="styles/legend/Map03_PALEOMAP_6min_Pliocene_5Ma_0_0.png" /> -7000.0000<br />\
-    <img src="styles/legend/Map03_PALEOMAP_6min_Pliocene_5Ma_0_1.png" /> -2625.0000<br />\
-    <img src="styles/legend/Map03_PALEOMAP_6min_Pliocene_5Ma_0_2.png" /> 1750.0000<br />\
-    <img src="styles/legend/Map03_PALEOMAP_6min_Pliocene_5Ma_0_3.png" /> 6125.0000<br />\
-    <img src="styles/legend/Map03_PALEOMAP_6min_Pliocene_5Ma_0_4.png" /> 10500.0000<br />' ,
-        
-        
-        source: new ol.source.ImageStatic({
-            url: "./layers/Map03_PALEOMAP_6min_Pliocene_5Ma_0.png",
-            attributions: ' ',
-            projection: 'EPSG:4326',
-            alwaysInRange: true,
-            imageExtent: [-180.050000, -90.050000, 180.050000, 90.050000]
-        })
-    });
+// 1. Permanent Base Map (Green/Blue Bathymetry & Topography)
+var lyr_BaseMap = new ol.layer.Image({
+    opacity: 1,
+    title: 'Base Map',
+    source: new ol.source.ImageStatic({
+        url: "./layers/Map03_PALEOMAP_6min_Pliocene_5Ma_0.png",
+        projection: 'EPSG:4326',
+        alwaysInRange: true,
+        imageExtent: [-180.050000, -90.050000, 180.050000, 90.050000]
+    })
+});
 
-lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0.setVisible(true);
-var layersList = [lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0];
+// 2. Grey Land-Sea Mask Overlay
+var lyr_LSM = new ol.layer.Image({
+    opacity: 1,
+    title: 'Land Sea Mask',
+    source: new ol.source.ImageStatic({
+        url: "./layers/land_sea_mask.png", // Ensure this matches your actual mask filename in the layers folder
+        projection: 'EPSG:4326',
+        alwaysInRange: true,
+        imageExtent: [-180.050000, -90.050000, 180.050000, 90.050000]
+    })
+});
+
+// Set Initial Visibilities
+lyr_BaseMap.setVisible(true);  // Base map stays ON permanently
+lyr_LSM.setVisible(false);     // Mask starts OFF (or set to true if preferred)
+
+// Register layers into OpenLayers map array
+var layersList = [lyr_BaseMap, lyr_LSM];
