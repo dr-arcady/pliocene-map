@@ -731,10 +731,10 @@ document.addEventListener('DOMContentLoaded', function() {
 	});
 	map.addLayer(pbdbVectorLayer);
 
-	// Map Popup Initialization
-	var container = document.getElementById('popup');
-	var content = document.getElementById('popup-content');
-	var closer = document.getElementById('popup-closer');
+	// Custom Fossil Popup Overlay
+	var container = document.getElementById('fossil-popup');
+	var content = document.getElementById('fossil-popup-content');
+	var closer = document.getElementById('fossil-popup-closer');
 	
 	var overlay = new ol.Overlay({
 	    element: container,
@@ -749,13 +749,13 @@ document.addEventListener('DOMContentLoaded', function() {
 	    return false;
 	};
 	
-	// Change mouse cursor to a pointer when hovering over a fossil dot
+	// Pointer cursor on hover
 	map.on('pointermove', function(e) {
 	    var hit = map.hasFeatureAtPixel(e.pixel, { hitTolerance: 5 });
 	    map.getTargetElement().style.cursor = hit ? 'pointer' : '';
 	});
 	
-	// Click Event Handler for Vector Features
+	// Click handler to render attribute text
 	map.on('singleclick', function(evt) {
 	    var feature = map.forEachFeatureAtPixel(evt.pixel, function(feat) {
 	        return feat;
@@ -763,11 +763,9 @@ document.addEventListener('DOMContentLoaded', function() {
 	
 	    if (feature) {
 	        var props = feature.getProperties();
-	        console.log('Clicked Feature Attributes:', props);
-	        
 	        var keys = Object.keys(props).filter(function(k) { return k !== 'geometry'; });
 	        var bodyText = '';
-	        
+	
 	        if (keys.length > 0) {
 	            keys.forEach(function(key) {
 	                bodyText += '<b>' + key + ':</b> ' + props[key] + '<br>';
