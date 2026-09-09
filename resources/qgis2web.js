@@ -1118,4 +1118,56 @@ document.addEventListener('DOMContentLoaded', function() {
 	            }
 	        }
 	    });
-	
+
+// --- Master Map Click Handler (Fossil Data & Coordinates) ---
+map.on('singleclick', function(evt) {
+    var clickedFeature = null;
+
+    // Detect if a feature from the fossil layer was clicked
+    map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
+        if (feature && feature.get('tna')) {
+            clickedFeature = feature;
+            return true;
+        }
+    });
+
+    var popupTextElem = document.getElementById('popup-coord-text');
+    var popupElem = document.getElementById('popup');
+
+    if (clickedFeature) {
+        var props = clickedFeature.getProperties();
+        var taxonName = props.tna || props.name || 'Fossil Occurrence';
+        var recordId = props.oid || props.occurrence_no || 'N/A';
+        var lat = evt.coordinate[1].toFixed(4);
+        var lon = evt.coordinate[0].toFixed(4);
+
+        // Display fossil attributes inside popup
+        if (popupTextElem) {
+            popupTextElem.innerHTML = '<b>' + taxonName + '</b><br>ID: ' + recordId + '<br>Coords: ' + lat + ', ' + lon;
+        }
+    } else {
+        // Display plain coordinates when clicking empty space
+        var lon = evt.coordinate[0].toFixed(4);
+        var lat = evt.coordinate[1].toFixed(4);
+        if (popupTextElem) {
+            popupTextElem.innerText = lat + ", " + lon;
+        }
+    }
+
+    // Display popup at click position
+    if (popupOverlay) {
+        popupOverlay.setPosition(evt.coordinate);
+    }
+    if (popupElem) {
+        popupElem.style.display = 'flex';
+    }
+
+    // Automatically hide after 5 seconds
+    if (window.coordPopupTimeout) {
+        clearTimeout(window.coordPopupTimeout);
+    }
+    window.coordPopupTimeout = setTimeout(function() {
+        if (popupElem) popupElem.style.display = 'none';
+        if (popupOverlay) popupOverlay.setPosition(undefined);
+    }, 5000);
+});
