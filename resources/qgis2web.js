@@ -7,12 +7,23 @@ var map = new ol.Map({
         projection: 'EPSG:4326',
         constrainResolution: true,
         maxZoom: 28,
-        minZoom: 1,
-        
+        minZoom: 1
     })
-});<!-- EXACT LINES TO REPLACE WITH -->
-<div class="right-controls-wrapper">
-  <!-- Coordinate Tools Panel -->
+});
+
+// EXACT LINES TO ADD IN qgis2web.js:
+function togglePanel(contentId, arrowId) {
+    var content = document.getElementById(contentId);
+    var arrow = document.getElementById(arrowId);
+    if (content.style.display === "none" || content.style.display === "") {
+        content.style.display = "block";
+        if (arrow) arrow.textContent = "▲";
+    } else {
+        content.style.display = "none";
+        if (arrow) arrow.textContent = "▼";
+    }
+}
+
   <div id="coord-panel" class="map-panel">
     <button class="panel-toggle-btn" onclick="togglePanel('coord-content', 'coord-arrow')">
       <span>📍 Coordinate Tools</span>
@@ -983,4 +994,17 @@ document.addEventListener('DOMContentLoaded', function() {
 	      }
 	    });
 	  });
+	}
+
+	// togglePanel Function
+	function togglePanel(contentId, arrowId) {
+	    var content = document.getElementById(contentId);
+	    var arrow = document.getElementById(arrowId);
+	    if (content.style.display === "none" || content.style.display === "") {
+	        content.style.display = "block";
+	        if (arrow) arrow.textContent = "▲";
+	    } else {
+	        content.style.display = "none";
+	        if (arrow) arrow.textContent = "▼";
+	    }
 	}
