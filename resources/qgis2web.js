@@ -711,3 +711,22 @@ document.addEventListener('DOMContentLoaded', function() {
     if (attributionControl) {
         bottomRightContainerDiv.appendChild(attributionControl);
     }
+
+	// PBDB Pliocene Fossil Occurrences Layer
+	var pbdbVectorSource = new ol.source.Vector({
+	    url: './layers/pbdb_pliocene.geojson',
+	    format: new ol.format.GeoJSON()
+	});
+	
+	var pbdbVectorLayer = new ol.layer.Vector({
+	    source: pbdbVectorSource,
+	    style: new ol.style.Style({
+	        image: new ol.style.Circle({
+	            radius: 5,
+	            fill: new ol.style.Fill({ color: '#8e44ad' }),
+	            stroke: new ol.style.Stroke({ color: '#ffffff', width: 1 })
+	        })
+	    }),
+	    title: 'Pliocene Fossil Occurrences'
+	});
+	map.addLayer(pbdbVectorLayer);
