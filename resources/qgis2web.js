@@ -147,7 +147,7 @@ var mousePosControl = new ol.control.MousePosition({
 });
 map.addControl(mousePosControl);
 
-// 2. Interactive Pin Pointer Layer
+// --- Interactive Red Pin Layer ---
 var pinSource = new ol.source.Vector();
 var pinLayer = new ol.layer.Vector({
     source: pinSource,
@@ -160,6 +160,38 @@ var pinLayer = new ol.layer.Vector({
     })
 });
 map.addLayer(pinLayer);
+pinLayer.setZIndex(10000); // Ensures the red pin sits on top of all maps/overlays
+
+// --- Unified Coordinate Jump Control ---
+var coordBtn = document.getElementById('coord-go-btn');
+if (coordBtn) {
+    coordBtn.addEventListener('click', function() {
+        var inputVal = document.getElementById('coord-input').value.trim();
+        if (!inputVal) return;
+
+        var parts = inputVal.split(',').map(function(item) { 
+            return parseFloat(item.trim()); 
+        });
+
+        if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+            var lat = parts[0];
+            var lon = parts[1];
+            var coords = [lon, lat];
+
+            // Clear old marker and drop new red pin
+            pinSource.clear();
+            var pinFeature = new ol.Feature({
+                geometry: new ol.geom.Point(coords)
+            });
+            pinSource.addFeature(pinFeature);
+
+            // Animate view to location
+            map.getView().animate({ center: coords, zoom: 6, duration: 800 });
+        } else {
+            alert('Please enter coordinates in "Latitude, Longitude" format (e.g., 15.5, 42.1)');
+        }
+    });
+}
 
 // Link OpenLayers MousePosition to UI panel display
 mousePosControl.setTarget(document.getElementById('coord-display'));
@@ -1040,52 +1072,6 @@ document.addEventListener('DOMContentLoaded', function() {
 	        content.style.display = "none";
 	        if (arrow) arrow.textContent = "▼";
 	    }
-	}
-
-	// --- 1. Coordinate Marker Vector Layer ---
-	var searchMarkerSource = new ol.source.Vector();
-	var searchMarkerLayer = new ol.layer.Vector({
-	    source: searchMarkerSource,
-	    style: new ol.style.Style({
-	        image: new ol.style.Circle({
-	            radius: 8,
-	            fill: new ol.style.Fill({ color: '#ff0000' }),
-	            stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
-	        })
-	    })
-	});
-	map.addLayer(searchMarkerLayer);
-	
-	// --- 2. Safe Coordinate Jump Handler ---
-	var coordBtn = document.getElementById('coord-go-btn');
-	if (coordBtn) {
-	    coordBtn.addEventListener('click', function() {
-	        var inputVal = document.getElementById('coord-input').value.trim();
-	        if (!inputVal) return;
-	
-	        var parts = inputVal.split(',').map(function(item) {
-	            return parseFloat(item.trim());
-	        });
-	
-	        if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-	            var lat = parts[0];
-	            var lon = parts[1];
-	            var coord = [lon, lat];
-	
-	            map.getView().animate({
-	                center: coord,
-	                zoom: 6,
-	                duration: 1000
-	            });
-	
-	            searchMarkerSource.clear();
-	            searchMarkerSource.addFeature(new ol.Feature({
-	                geometry: new ol.geom.Point(coord)
-	            }));
-	        } else {
-	            alert("Please enter valid coordinates (e.g., 15.5, 35.7)");
-	        }
-	    });
 	}
 	
 	// --- 3. Dynamic PBDB Fossil Layer ---
