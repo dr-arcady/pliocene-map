@@ -147,7 +147,7 @@ var mousePosControl = new ol.control.MousePosition({
 });
 map.addControl(mousePosControl);
 
-// --- Interactive Red Pin Layer ---
+// --- Independent Coordinate Pin Layer ---
 var pinSource = new ol.source.Vector();
 var pinLayer = new ol.layer.Vector({
     source: pinSource,
@@ -159,13 +159,18 @@ var pinLayer = new ol.layer.Vector({
         })
     })
 });
-map.addLayer(pinLayer);
-pinLayer.setZIndex(10000); // Ensures the red pin sits on top of all maps/overlays
 
-// --- Unified Coordinate Jump Control ---
+// Force pin to stay above ALL maps, raster overlays, and fossil vector layers
+pinLayer.setZIndex(99999);
+map.addLayer(pinLayer);
+
+// --- Independent Coordinate Jump Execution ---
 var coordBtn = document.getElementById('coord-go-btn');
 if (coordBtn) {
-    coordBtn.addEventListener('click', function() {
+    coordBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
         var inputVal = document.getElementById('coord-input').value.trim();
         if (!inputVal) return;
 
@@ -178,14 +183,14 @@ if (coordBtn) {
             var lon = parts[1];
             var coords = [lon, lat];
 
-            // Clear old marker and drop new red pin
+            // Render pin independently
             pinSource.clear();
             var pinFeature = new ol.Feature({
                 geometry: new ol.geom.Point(coords)
             });
             pinSource.addFeature(pinFeature);
 
-            // Animate view to location
+            // Zoom map to target location
             map.getView().animate({ center: coords, zoom: 6, duration: 800 });
         } else {
             alert('Please enter coordinates in "Latitude, Longitude" format (e.g., 15.5, 42.1)');
@@ -1043,21 +1048,13 @@ document.addEventListener('DOMContentLoaded', function() {
 	  }
 	}
 	
-	// Fossil Occurrences Toggle
+	// Fossil Occurrences Toggle (Targets ONLY pbdbVectorLayer)
 	var fossilChk = document.getElementById('chk-fossils');
 	if (fossilChk) {
 	  fossilChk.addEventListener('change', function(e) {
-	    map.getLayers().forEach(function(layer) {
-	      if (layer instanceof ol.layer.Group) {
-	        layer.getLayers().forEach(function(subLayer) {
-	          if (subLayer instanceof ol.layer.Vector) {
-	            subLayer.setVisible(e.target.checked);
-	          }
-	        });
-	      } else if (layer instanceof ol.layer.Vector) {
-	        layer.setVisible(e.target.checked);
-	      }
-	    });
+	    if (typeof pbdbVectorLayer !== 'undefined') {
+	        pbdbVectorLayer.setVisible(e.target.checked);
+	    }
 	  });
 	}
 
