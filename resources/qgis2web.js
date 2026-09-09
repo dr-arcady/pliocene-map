@@ -1052,8 +1052,12 @@ document.addEventListener('DOMContentLoaded', function() {
 	    }
 	}
 	
-	// --- 3. Attach Listeners to Specific Map Layers ---
-	// Fossil Occurrences Toggle
+	// --- 3. Attach Listeners to Active Map Layers ---
+	// Topography / PALEOMAP Base Layer
+	setupLayerToggle('chk-topo', typeof lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 !== 'undefined' ? lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 : null);
+	setupLayerOpacity('op-topo', typeof lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 !== 'undefined' ? lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 : null);
+	
+	// Fossil Occurrences Toggle (if loaded dynamically)
 	setupLayerToggle('chk-fossils', typeof pbdbVectorLayer !== 'undefined' ? pbdbVectorLayer : null);
 	
 	// Raster & Vector Layers (matching layers defined in layers.js)
