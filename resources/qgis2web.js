@@ -834,41 +834,44 @@ document.addEventListener('DOMContentLoaded', function() {
 	map.getLayers().insertAt(5, iceLayer);
 	map.getLayers().insertAt(6, lakeLayer);
 	
-	// Bind Controls safely after DOM load
-	document.addEventListener("DOMContentLoaded", function() {
-	  function bindControl(chkId, opId, layer) {
-	    var checkbox = document.getElementById(chkId);
-	    var slider = document.getElementById(opId);
+	// Bind Controls directly (DOM is already loaded at bottom of body)
+	function bindControl(chkId, opId, layer) {
+	  var checkbox = document.getElementById(chkId);
+	  var slider = document.getElementById(opId);
 	
-	    if (checkbox) {
-	      layer.setVisible(checkbox.checked);
-	      checkbox.addEventListener('change', function(e) {
-	        layer.setVisible(e.target.checked);
-	      });
-	    }
-	
-	    if (slider) {
-	      layer.setOpacity(parseFloat(slider.value));
-	      slider.addEventListener('input', function(e) {
-	        layer.setOpacity(parseFloat(e.target.value));
-	      });
-	    }
-	  }
-	
-	  // Bind Raster Layers
-	  bindControl('chk-lsm', 'op-lsm', lsmLayer);
-	  bindControl('chk-topo', 'op-topo', topoLayer);
-	  bindControl('chk-sst', 'op-sst', sstLayer);
-	  bindControl('chk-biome', 'op-biome', biomeLayer);
-	  bindControl('chk-soil', 'op-soil', soilLayer);
-	  bindControl('chk-ice', 'op-ice', iceLayer);
-	  bindControl('chk-lake', 'op-lake', lakeLayer);
-	
-	  // Bind Fossil Layer Toggle (Finds vector layer in qgis2web layers array)
-	  var fossilChk = document.getElementById('chk-fossils');
-	  if (fossilChk && typeof lyr_pliocene_fossils !== 'undefined') {
-	    fossilChk.addEventListener('change', function(e) {
-	      lyr_pliocene_fossils.setVisible(e.target.checked);
+	  if (checkbox) {
+	    layer.setVisible(checkbox.checked);
+	    checkbox.addEventListener('change', function(e) {
+	      layer.setVisible(e.target.checked);
 	    });
 	  }
-	});
+	
+	  if (slider) {
+	    layer.setOpacity(parseFloat(slider.value));
+	    slider.addEventListener('input', function(e) {
+	      layer.setOpacity(parseFloat(e.target.value));
+	    });
+	  }
+	}
+	
+	// Bind Raster Layers
+	bindControl('chk-lsm', 'op-lsm', lsmLayer);
+	bindControl('chk-topo', 'op-topo', topoLayer);
+	bindControl('chk-sst', 'op-sst', sstLayer);
+	bindControl('chk-biome', 'op-biome', biomeLayer);
+	bindControl('chk-soil', 'op-soil', soilLayer);
+	bindControl('chk-ice', 'op-ice', iceLayer);
+	bindControl('chk-lake', 'op-lake', lakeLayer);
+	
+	// Bind Fossil Layer Toggle
+	var fossilChk = document.getElementById('chk-fossils');
+	if (fossilChk) {
+	  fossilChk.addEventListener('change', function(e) {
+	    var layers = map.getLayers().getArray();
+	    layers.forEach(function(layer) {
+	      if (layer instanceof ol.layer.Vector) {
+	        layer.setVisible(e.target.checked);
+	      }
+	    });
+	  });
+	}
