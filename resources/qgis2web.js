@@ -714,8 +714,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	// PBDB Pliocene Fossil Occurrences Layer
 	var pbdbVectorSource = new ol.source.Vector({
-	    url: './layers/pbdb_pliocene.geojson',
-	    format: new ol.format.GeoJSON()
+	    loader: async function(extent, resolution, projection) {
+	        var response = await fetch('./layers/pbdb_pliocene.fgb');
+	        var container = this;
+	        for await (let feature of flatgeobuf.deserialize(response.body)) {
+	            var olFeature = new ol.format.GeoJSON().readFeature(feature, {
+	                dataProjection: 'EPSG:4326',
+	                featureProjection: 'EPSG:4326'
+	            });
+	            container.addFeature(olFeature);
+	        }
+	    }
 	});
 	
 	var pbdbVectorLayer = new ol.layer.Vector({
