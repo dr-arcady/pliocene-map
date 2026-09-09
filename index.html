@@ -45,36 +45,41 @@
         </style>
         <title></title>
         <style>
-            .ol-popup {
+            .fossil-popup-box {
+                display: block !important;
                 position: absolute;
-                background-color: white;
-                box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-                padding: 15px;
-                border-radius: 8px;
+                background-color: #ffffff;
+                box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+                padding: 12px 16px;
+                border-radius: 6px;
                 border: 1px solid #cccccc;
                 bottom: 12px;
                 left: -50px;
-                min-width: 200px;
-                z-index: 1000;
+                min-width: 180px;
+                z-index: 9999 !important;
+                font-family: sans-serif;
+                font-size: 13px;
+                color: #333333;
             }
-            .ol-popup-closer {
+            .fossil-popup-closer {
                 text-decoration: none;
                 position: absolute;
-                top: 2px;
+                top: 4px;
                 right: 8px;
-                color: #999;
+                color: #888888;
                 font-weight: bold;
+                font-size: 14px;
             }
-            .ol-popup-closer:after {
+            .fossil-popup-closer:after {
                 content: "✖";
             }
         </style>
     </head>
     <body>
         <div id="map">
-            <div id="popup" class="ol-popup">
-                <a href="#" id="popup-closer" class="ol-popup-closer"></a>
-                <div id="popup-content"></div>
+            <div id="fossil-popup" class="fossil-popup-box">
+                <a href="#" id="fossil-popup-closer" class="fossil-popup-closer"></a>
+                <div id="fossil-popup-content"></div>
             </div>
         </div>
         <div id="popup" class="ol-popup">
