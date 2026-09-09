@@ -730,3 +730,42 @@ document.addEventListener('DOMContentLoaded', function() {
 	    title: 'Pliocene Fossil Occurrences'
 	});
 	map.addLayer(pbdbVectorLayer);
+
+	// Map Popup Initialization
+	var container = document.getElementById('popup');
+	var content = document.getElementById('popup-content');
+	var closer = document.getElementById('popup-closer');
+	
+	var overlay = new ol.Overlay({
+	    element: container,
+	    autoPan: true,
+	    autoPanAnimation: { duration: 250 }
+	});
+	map.addOverlay(overlay);
+	
+	closer.onclick = function() {
+	    overlay.setPosition(undefined);
+	    closer.blur();
+	    return false;
+	};
+	
+	// Click Event Handler for Vector Features
+	map.on('singleclick', function(evt) {
+	    var feature = map.forEachFeatureAtPixel(evt.pixel, function(feat) {
+	        return feat;
+	    });
+	
+	    if (feature) {
+	        var props = feature.getProperties();
+	        var name = props.accepted_name || props.taxon_name || 'Unknown Specimen';
+	        var taxonClass = props.class || props.phylum || 'N/A';
+	        var env = props.environment || 'N/A';
+	
+	        content.innerHTML = '<strong>' + name + '</strong><br>' +
+	                            '<b>Class/Taxon:</b> ' + taxonClass + '<br>' +
+	                            '<b>Environment:</b> ' + env;
+	        overlay.setPosition(evt.coordinate);
+	    } else {
+	        overlay.setPosition(undefined);
+	    }
+	});
