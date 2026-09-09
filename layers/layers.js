@@ -14,7 +14,7 @@ var lyr_Map03_PALEOMAP_6min_Pliocene_5Ma_0 = new ol.layer.Image({
         source: new ol.source.ImageStatic({
             url: "./layers/Map03_PALEOMAP_6min_Pliocene_5Ma_0.png",
             attributions: ' ',
-            projection: 'EPSG:3857',
+            projection: 'EPSG:4326',
             alwaysInRange: true,
             imageExtent: [-180.050000, -90.050000, 180.050000, 90.050000]
         })
