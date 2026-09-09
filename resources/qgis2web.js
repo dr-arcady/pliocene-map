@@ -783,6 +783,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	// --- GeoTIFF Layer Initialization ---
 
+	// REPLACE THIS SECTION:
 	var lsmLayer = new ol.layer.WebGLTile({
 	  visible: true,
 	  opacity: 1.0,
