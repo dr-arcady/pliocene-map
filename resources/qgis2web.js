@@ -1094,7 +1094,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	});
 	map.addLayer(pbdbVectorLayer);
 	
-	// Fetch Pliocene Fossils from PBDB
+	// Fetch Pliocene Fossils from PBDB (Respects UI Checkbox State)
 	fetch('https://paleobiodb.org/data1.2/occs/list.json?interval=Pliocene&show=coords')
 	    .then(function(res) { return res.json(); })
 	    .then(function(data) {
@@ -1107,6 +1107,12 @@ document.addEventListener('DOMContentLoaded', function() {
 	                }
 	            }).filter(Boolean);
 	            fossilSource.addFeatures(features);
+	            
+	            // Sync visibility immediately after features load
+	            var fossilChk = document.getElementById('chk-fossils');
+	            if (fossilChk && typeof pbdbVectorLayer !== 'undefined') {
+	                pbdbVectorLayer.setVisible(fossilChk.checked);
+	            }
 	        }
 	    });
 	
