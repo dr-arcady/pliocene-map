@@ -8,6 +8,7 @@ var map = new ol.Map({
         constrainResolution: true,
         maxZoom: 28,
         minZoom: 1
+		multiWorld: true
     })
 });
 
