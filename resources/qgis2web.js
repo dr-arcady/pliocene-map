@@ -7,7 +7,7 @@ var map = new ol.Map({
         projection: 'EPSG:4326',
         constrainResolution: true,
         maxZoom: 28,
-        minZoom: 1
+        minZoom: 1,
 		multiWorld: true
     })
 });
