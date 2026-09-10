@@ -1175,16 +1175,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	// Fetch Data Directly into Window Source
 	showSpinner('loading...');
-	fetch('https://paleobiodb.org/data1.2/occs/list.json?interval=Pliocene&show=coords,ident,attr')
+	fetch('https://paleobiodb.org/data1.2/occs/list.json?interval=Pliocene&show=coords,ident,attr,paleoloc')
 	    .then(function(res) { return res.json(); })
 	    .then(function(data) {
 	        if (data && data.records) {
 	            var features = [];
 	            for (var i = 0; i < data.records.length; i++) {
 	                var rec = data.records[i];
-	                if (rec.lng !== undefined && rec.lat !== undefined) {
+	                // Use paleocoordinates if available; fall back to modern coordinates
+	                var lng = rec.plng !== undefined ? rec.plng : rec.lng;
+	                var lat = rec.plat !== undefined ? rec.plat : rec.lat;
+
+	                if (lng !== undefined && lat !== undefined) {
 	                    var feat = new ol.Feature({
-	                        geometry: new ol.geom.Point([rec.lng, rec.lat]),
+	                        geometry: new ol.geom.Point([lng, lat]),
 	                        isFossil: true,
 	                        tna: rec.tna || rec.nam || rec.tgn || 'Fossil Occurrence',
 	                        oid: rec.oid || rec.occ_no || rec.cid || 'N/A'
