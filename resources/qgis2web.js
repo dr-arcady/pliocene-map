@@ -1145,14 +1145,14 @@ document.addEventListener('DOMContentLoaded', function() {
 	    visible: false,
 	    style: new ol.style.Style({
 	        image: new ol.style.Circle({
-	            radius: 5,
+	            radius: 6,
 	            fill: new ol.style.Fill({ color: '#8e44ad' }),
-	            stroke: new ol.style.Stroke({ color: '#ffffff', width: 1 })
+	            stroke: new ol.style.Stroke({ color: '#ffffff', width: 1.5 })
 	        })
 	    })
 	});
 	map.addLayer(window.pbdbVectorLayer);
-	window.pbdbVectorLayer.setZIndex(999);
+	window.pbdbVectorLayer.setZIndex(9999);
 
 	// Toggle Listener
 	var fossilChk = document.getElementById('chk-fossils');
@@ -1174,7 +1174,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 	// Fetch Data Directly into Window Source
-	showSpinner('Fetching the Fossils');
+	showSpinner('Fetching fossil data...');
 	fetch('https://paleobiodb.org/data1.2/occs/list.json?interval=Pliocene&show=coords,ident,attr')
 	    .then(function(res) { return res.json(); })
 	    .then(function(data) {
@@ -1204,6 +1204,32 @@ document.addEventListener('DOMContentLoaded', function() {
 	        hideSpinner();
 	    });
 
+	// --- Reliable Fossil Click Listener ---
+	map.on('singleclick', function(evt) {
+	    var fossilChk = document.getElementById('chk-fossils');
+	    if (fossilChk && !fossilChk.checked) return;
+
+	    var clickedFeature = map.forEachFeatureAtPixel(evt.pixel, function(feature) {
+	        return feature;
+	    }, { hitTolerance: 12 });
+
+	    if (clickedFeature && clickedFeature.get('isFossil')) {
+	        var taxonName = clickedFeature.get('tna') || 'Fossil Occurrence';
+	        var recordId = clickedFeature.get('oid') || 'N/A';
+	        var coord = evt.coordinate;
+	        var lat = coord[1].toFixed(4);
+	        var lon = coord[0].toFixed(4);
+
+	        content.innerHTML = '<div style="padding: 4px; font-family: sans-serif;">' +
+	            '<strong style="color: #8e44ad; font-size: 14px;">' + taxonName + '</strong><br>' +
+	            '<b>Record ID:</b> ' + recordId + '<br>' +
+	            '<b>Coordinates:</b> ' + lat + '°, ' + lon + '°' +
+	            '</div>';
+
+	        container.style.display = 'block';
+	        overlayPopup.setPosition(coord);
+	    }
+	});
 /*
 // --- Direct Canvas Pointer Click Handler ---
 map.getViewport().addEventListener('pointerup', function(e) {
