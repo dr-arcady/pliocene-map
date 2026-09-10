@@ -904,32 +904,38 @@ document.addEventListener('DOMContentLoaded', function() {
 	  style: {
 	    color: [
 	      'case',
-	      // --- WATER / BATHYMETRY (<= 0m) ---
-	      ['<=', ['band', 1], 0],
-	      [
-	        'interpolate',
-	        ['linear'],
-	        ['band', 1],
-	        -6000, [8, 22, 54, 1],      // Abyssal Trench - Deep ocean (#081636)
-	        -2000, [21, 88, 194, 1],    // Abyssal Plain - Deep water (#1558C2)
-	        -200,  [0, 143, 224, 1],    // Continental Slope - Deep shelf edge (#008FE0)
-	        -100,  [0, 185, 230, 1],    // Outer Continental Shelf (#00B9E6)
-	        -50,   [72, 206, 238, 1],   // Mid Continental Shelf (#48CEEE)
-	        -10,   [146, 227, 246, 1],  // Inner Shelf & Shoals (#92E3F6)
-	        0,     [208, 245, 253, 1]   // Coastline Water Edge (#D0F5FD)
-	      ],
+	      // -6000: Abyssal Trench - Deep ocean (#091c47)
+	      ['<=', ['band', 1], -6000], [9, 28, 71, 1],
 	
-	      // --- LAND / TOPOGRAPHY (> 0m) ---
-	      [
-	        'interpolate',
-	        ['linear'],
-	        ['band', 1],
-	        0.1,   [244, 237, 162, 1],  // Lowland Coastline (#F4EDAE)
-	        500,   [244, 237, 162, 1],  // Lowland Coastline upper bound (#F4EDAE)
-	        2000,  [68, 172, 70, 1],    // Mid Elevation (#44AC46)
-	        4000,  [139, 90, 75, 1],    // Mountains (#8B5A4B)
-	        6000,  [255, 255, 255, 1]   // Peaks/Snow (#FFFFFF)
-	      ]
+	      // -2000: Abyssal Plain - Deep water (#1251ba)
+	      ['<=', ['band', 1], -2000], [18, 81, 186, 1],
+	
+	      // -200: Continental Slope - Deep shelf edge (#008ee0)
+	      ['<=', ['band', 1], -200], [0, 142, 224, 1],
+	
+	      // -100: Outer Continental Shelf (#00bce4)
+	      ['<=', ['band', 1], -100], [0, 188, 228, 1],
+	
+	      // -50: Mid Continental Shelf (#4dd3e8)
+	      ['<=', ['band', 1], -50], [77, 211, 232, 1],
+	
+	      // -10: Inner Shelf & Shoals (#9de5f4)
+	      ['<=', ['band', 1], -10], [157, 229, 244, 1],
+	
+	      // 0: Coastline Water Edge (#d7f3f9)
+	      ['<=', ['band', 1], 0], [215, 243, 249, 1],
+	
+	      // 500: Lowland Coastline (#f0e88b)
+	      ['<=', ['band', 1], 500], [240, 232, 139, 1],
+	
+	      // 2000: Mid Elevation (#48b848)
+	      ['<=', ['band', 1], 2000], [72, 184, 72, 1],
+	
+	      // 4000: Mountains (#885646)
+	      ['<=', ['band', 1], 4000], [136, 86, 70, 1],
+	
+	      // inf: Peaks / Snow (#ffffff)
+	      [255, 255, 255, 1]
 	    ]
 	  },
 	  source: new ol.source.GeoTIFF({
