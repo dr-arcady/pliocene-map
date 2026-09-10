@@ -1,4 +1,4 @@
-var infiniteGlobeExtent = [-Infinity, -90, Infinity, 90];
+var worldExtent = [-180, -90, 180, 90];
 
 var map = new ol.Map({
     target: 'map',
@@ -8,10 +8,11 @@ var map = new ol.Map({
         projection: 'EPSG:4326',
         center: [0, 0],
         zoom: 2,
-        minZoom: 2, // Stops user from zooming out past screen limits
+        minZoom: 2,
         maxZoom: 28,
-        extent: infiniteGlobeExtent,
-        multiWorld: true
+        extent: worldExtent,
+        smoothExtentConstraint: false,
+        multiWorld: false
     })
 });
 
