@@ -1,4 +1,4 @@
-var worldExtent = [-180, -90, 180, 90];
+var infiniteGlobeExtent = [-Infinity, -90, Infinity, 90];
 
 var map = new ol.Map({
     target: 'map',
@@ -10,8 +10,8 @@ var map = new ol.Map({
         zoom: 2,
         minZoom: 2, // Stops user from zooming out past screen limits
         maxZoom: 28,
-        extent: worldExtent, // Clamps view strictly to map edges (-180 to 180, -90 to 90)
-        smoothExtentConstraint: false
+        extent: infiniteGlobeExtent,
+        multiWorld: true
     })
 });
 
@@ -1100,6 +1100,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	
 	// --- Unified Self-Contained PBDB Vector Layer & Fetch ---
 	window.pbdbSource = new ol.source.Vector();
+		wrapX: true
+	});
 
 	window.pbdbVectorLayer = new ol.layer.Vector({
 	    source: window.pbdbSource,
