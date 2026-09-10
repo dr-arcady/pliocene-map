@@ -894,65 +894,78 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	// --- GeoTIFF Layer Initialization ---
 
-	// --- Wrapped GeoTIFF Layer Initialization ---
-	function createWrappedLayers(url, opacity) {
-	    var shifts = [-360, 0, 360];
-	    return shifts.map(function(shift) {
-	        return new ol.layer.WebGLTile({
-	            visible: false,
-	            opacity: opacity,
-	            source: new ol.source.GeoTIFF({
-	                sources: [{
-	                    url: url,
-	                    left: -180 + shift,
-	                    right: 180 + shift,
-	                    bottom: -90,
-	                    top: 90
-	                }]
-	            })
-	        });
+	// --- Canvas Wrapped Static Image Layer Engine ---
+	function createWrappingRasterLayer(imageUrl, opacity) {
+	    var canvas = document.createElement('canvas');
+	    var ctx = canvas.getContext('2d');
+	    var img = new Image();
+	    img.crossOrigin = 'anonymous';
+
+	    var source = new ol.source.ImageStatic({
+	        url: imageUrl,
+	        projection: 'EPSG:4326',
+	        imageExtent: [-180, -90, 180, 90]
 	    });
+
+	    // Wrap inside standard tile source for continuous wrapX looping
+	    var tileSource = new ol.source.TileImage({
+	        projection: 'EPSG:4326',
+	        tileGrid: ol.tilegrid.createXYZ({ extent: [-180, -90, 180, 90], maxZoom: 28 }),
+	        wrapX: true,
+	        tileUrlFunction: function() { return imageUrl; }
+	    });
+
+	    var layer = new ol.layer.Tile({
+	        visible: false,
+	        opacity: opacity,
+	        source: tileSource
+	    });
+
+	    return layer;
 	}
 
-	var lsmLayers = createWrappedLayers('layers/lsm.tif', 1.0);
-	var topoLayers = createWrappedLayers('layers/topo.tif', 0.8);
-	var sstLayers = createWrappedLayers('layers/sst.tif', 0.8);
-	var biomeLayers = createWrappedLayers('layers/mbiome.tif', 0.8);
-	var soilLayers = createWrappedLayers('layers/soil.tif', 0.8);
-	var iceLayers = createWrappedLayers('layers/icemask.tif', 0.9);
-	var lakeLayers = createWrappedLayers('layers/lake.tif', 0.9);
+	var lsmLayer = createWrappingRasterLayer('layers/lsm.tif', 1.0);
+	var topoLayer = createWrappingRasterLayer('layers/topo.tif', 0.8);
+	var sstLayer = createWrappingRasterLayer('layers/sst.tif', 0.8);
+	var biomeLayer = createWrappingRasterLayer('layers/mbiome.tif', 0.8);
+	var soilLayer = createWrappingRasterLayer('layers/soil.tif', 0.8);
+	var iceLayer = createWrappingRasterLayer('layers/icemask.tif', 0.9);
+	var lakeLayer = createWrappingRasterLayer('layers/lake.tif', 0.9);
 
-	[].concat(lsmLayers, topoLayers, sstLayers, biomeLayers, soilLayers, iceLayers, lakeLayers)
-	  .forEach(function(layer) { map.addLayer(layer); });
+	map.addLayer(lsmLayer);
+	map.addLayer(topoLayer);
+	map.addLayer(sstLayer);
+	map.addLayer(biomeLayer);
+	map.addLayer(soilLayer);
+	map.addLayer(iceLayer);
+	map.addLayer(lakeLayer);
 
-	// Helper function for UI bindings (Array Aware)
-	function connectLayerGroup(chkId, sliderId, layers) {
-	    if (!layers || !layers.length) return;
+	// Helper function for UI bindings
+	function connectLayer(chkId, sliderId, layer) {
+	    if (!layer) return;
 	    var chk = document.getElementById(chkId);
 	    if (chk) {
-	        layers.forEach(function(layer) { layer.setVisible(chk.checked); });
+	        layer.setVisible(chk.checked);
 	        chk.addEventListener('change', function() {
-	            var isChecked = this.checked;
-	            layers.forEach(function(layer) { layer.setVisible(isChecked); });
+	            layer.setVisible(this.checked);
 	        });
 	    }
 	    var slider = document.getElementById(sliderId);
 	    if (slider) {
 	        slider.addEventListener('input', function() {
-	            var val = parseFloat(this.value);
-	            layers.forEach(function(layer) { layer.setOpacity(val); });
+	            layer.setOpacity(parseFloat(this.value));
 	        });
 	    }
 	}
 
-	// Connect UI Controls to GeoTIFF layer groups
-	connectLayerGroup('chk-lsm', 'op-lsm', lsmLayers);
-	connectLayerGroup('chk-topo', 'op-topo', topoLayers);
-	connectLayerGroup('chk-sst', 'op-sst', sstLayers);
-	connectLayerGroup('chk-biome', 'op-biome', biomeLayers);
-	connectLayerGroup('chk-soil', 'op-soil', soilLayers);
-	connectLayerGroup('chk-ice', 'op-ice', iceLayers);
-	connectLayerGroup('chk-lake', 'op-lake', lakeLayers);
+	// Connect UI Controls directly to wrapped raster layers
+	connectLayer('chk-lsm', 'op-lsm', lsmLayer);
+	connectLayer('chk-topo', 'op-topo', topoLayer);
+	connectLayer('chk-sst', 'op-sst', sstLayer);
+	connectLayer('chk-biome', 'op-biome', biomeLayer);
+	connectLayer('chk-soil', 'op-soil', soilLayer);
+	connectLayer('chk-ice', 'op-ice', iceLayer);
+	connectLayer('chk-lake', 'op-lake', lakeLayer);
 
 	// --- Fix 2: Panel Toggle Handler ---
 	function togglePanel(contentId, arrowId) {
