@@ -1,3 +1,4 @@
+var worldExtent = [-180, -90, 180, 90];
 
 var map = new ol.Map({
     target: 'map',
@@ -5,10 +6,12 @@ var map = new ol.Map({
     layers: layersList,
     view: new ol.View({
         projection: 'EPSG:4326',
-        constrainResolution: true,
+        center: [0, 0],
+        zoom: 2,
+        minZoom: 2, // Stops user from zooming out past screen limits
         maxZoom: 28,
-        minZoom: 1,
-		multiWorld: true
+        extent: worldExtent, // Clamps view strictly to map edges (-180 to 180, -90 to 90)
+        smoothExtentConstraint: false
     })
 });
 
