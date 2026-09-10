@@ -900,20 +900,33 @@ document.addEventListener('DOMContentLoaded', function() {
 	
 	var topoLayer = new ol.layer.WebGLTile({
 	  visible: true,
-	  opacity: 0.9,
+	  opacity: 1.0,
 	  style: {
 	    color: [
 	      'case',
-	      // Dry Land (Elevation > 0): Render as distinct earthy green
-	      ['>', ['band', 1], 0],
-	      [46, 125, 50, 1],
+	      // --- WATER / BATHYMETRY (<= 0m) ---
+	      ['<=', ['band', 1], 0],
+	      [
+	        'interpolate',
+	        ['linear'],
+	        ['band', 1],
+	        -6000, [15, 32, 67, 1],      // Deep ocean trench (dark navy)
+	        -1000, [40, 100, 150, 1],    // Abyssal plain
+	        -200,  [100, 180, 210, 1],   // Continental shelf edge
+	        0,     [180, 230, 235, 1]    // Coastline water edge (crisp light cyan)
+	      ],
 
-	      // Shallow Submerged Shelf (-200m to 0m): Render as distinct light turquoise
-	      ['>', ['band', 1], -200],
-	      [129, 212, 250, 1],
-
-	      // Deep Ocean (below -200m): Render as dark ocean blue
-	      [13, 71, 161, 1]
+	      // --- LAND / TOPOGRAPHY (> 0m) ---
+	      [
+	        'interpolate',
+	        ['linear'],
+	        ['band', 1],
+	        0.1,  [230, 220, 170, 1],   // Coastline land edge (crisp sand/light green)
+	        500,  [160, 195, 120, 1],   // Lowlands
+	        2000, [215, 175, 110, 1],   // Highlands/plateaus
+	        4000, [170, 120, 80, 1],    // High mountains
+	        6000, [250, 250, 250, 1]    // Snowy peaks
+	      ]
 	    ]
 	  },
 	  source: new ol.source.GeoTIFF({
