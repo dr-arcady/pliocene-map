@@ -894,98 +894,65 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	// --- GeoTIFF Layer Initialization ---
 
-	// --- GeoTIFF Layer Initialization ---
-	var lsmLayer = new ol.layer.WebGLTile({
-	  visible: false,
-	  opacity: 1.0,
-	  source: new ol.source.GeoTIFF({
-	    sources: [{ url: 'layers/lsm.tif' }]
-	  })
-	});
-	
-	var topoLayer = new ol.layer.WebGLTile({
-	  visible: false,
-	  opacity: 0.8,
-	  source: new ol.source.GeoTIFF({
-	    sources: [{ url: 'layers/topo.tif' }]
-	  })
-	});
-	
-	var sstLayer = new ol.layer.WebGLTile({
-	  visible: false,
-	  opacity: 0.8,
-	  source: new ol.source.GeoTIFF({
-	    sources: [{ url: 'layers/sst.tif' }]
-	  })
-	});
-	
-	var biomeLayer = new ol.layer.WebGLTile({
-	  visible: false,
-	  opacity: 0.8,
-	  source: new ol.source.GeoTIFF({
-	    sources: [{ url: 'layers/mbiome.tif' }]
-	  })
-	});
-	
-	var soilLayer = new ol.layer.WebGLTile({
-	  visible: false,
-	  opacity: 0.8,
-	  source: new ol.source.GeoTIFF({
-	    sources: [{ url: 'layers/soil.tif' }]
-	  })
-	});
-	
-	var iceLayer = new ol.layer.WebGLTile({
-	  visible: false,
-	  opacity: 0.9,
-	  source: new ol.source.GeoTIFF({
-	    sources: [{ url: 'layers/icemask.tif' }]
-	  })
-	});
-	
-	var lakeLayer = new ol.layer.WebGLTile({
-	  visible: false,
-	  opacity: 0.9,
-	  source: new ol.source.GeoTIFF({
-	    sources: [{ url: 'layers/lake.tif' }]
-	  })
-	});
-	
-	// Add overlay layers to map
-	map.addLayer(lsmLayer);
-	map.addLayer(topoLayer);
-	map.addLayer(sstLayer);
-	map.addLayer(biomeLayer);
-	map.addLayer(soilLayer);
-	map.addLayer(iceLayer);
-	map.addLayer(lakeLayer);
+	// --- Wrapped GeoTIFF Layer Initialization ---
+	function createWrappedLayers(url, opacity) {
+	    var shifts = [-360, 0, 360];
+	    return shifts.map(function(shift) {
+	        return new ol.layer.WebGLTile({
+	            visible: false,
+	            opacity: opacity,
+	            source: new ol.source.GeoTIFF({
+	                sources: [{
+	                    url: url,
+	                    left: -180 + shift,
+	                    right: 180 + shift,
+	                    bottom: -90,
+	                    top: 90
+	                }]
+	            })
+	        });
+	    });
+	}
 
-	// Helper function for UI bindings
-	function connectLayer(chkId, sliderId, layer) {
-	    if (!layer) return;
+	var lsmLayers = createWrappedLayers('layers/lsm.tif', 1.0);
+	var topoLayers = createWrappedLayers('layers/topo.tif', 0.8);
+	var sstLayers = createWrappedLayers('layers/sst.tif', 0.8);
+	var biomeLayers = createWrappedLayers('layers/mbiome.tif', 0.8);
+	var soilLayers = createWrappedLayers('layers/soil.tif', 0.8);
+	var iceLayers = createWrappedLayers('layers/icemask.tif', 0.9);
+	var lakeLayers = createWrappedLayers('layers/lake.tif', 0.9);
+
+	[].concat(lsmLayers, topoLayers, sstLayers, biomeLayers, soilLayers, iceLayers, lakeLayers)
+	  .forEach(function(layer) { map.addLayer(layer); });
+
+	// Helper function for UI bindings (Array Aware)
+	function connectLayerGroup(chkId, sliderId, layers) {
+	    if (!layers || !layers.length) return;
 	    var chk = document.getElementById(chkId);
 	    if (chk) {
-	        layer.setVisible(chk.checked);
+	        layers.forEach(function(layer) { layer.setVisible(chk.checked); });
 	        chk.addEventListener('change', function() {
-	            layer.setVisible(this.checked);
+	            var isChecked = this.checked;
+	            layers.forEach(function(layer) { layer.setVisible(isChecked); });
 	        });
 	    }
 	    var slider = document.getElementById(sliderId);
 	    if (slider) {
 	        slider.addEventListener('input', function() {
-	            layer.setOpacity(parseFloat(this.value));
+	            var val = parseFloat(this.value);
+	            layers.forEach(function(layer) { layer.setOpacity(val); });
 	        });
 	    }
 	}
 
-	// Connect UI Controls directly to WebGLTile GeoTIFF layers
-	connectLayer('chk-lsm', 'op-lsm', lsmLayer);
-	connectLayer('chk-topo', 'op-topo', topoLayer);
-	connectLayer('chk-sst', 'op-sst', sstLayer);
-	connectLayer('chk-biome', 'op-biome', biomeLayer);
-	connectLayer('chk-soil', 'op-soil', soilLayer);
-	connectLayer('chk-ice', 'op-ice', iceLayer);
-	connectLayer('chk-lake', 'op-lake', lakeLayer);
+	// Connect UI Controls to GeoTIFF layer groups
+	connectLayerGroup('chk-lsm', 'op-lsm', lsmLayers);
+	connectLayerGroup('chk-topo', 'op-topo', topoLayers);
+	connectLayerGroup('chk-sst', 'op-sst', sstLayers);
+	connectLayerGroup('chk-biome', 'op-biome', biomeLayers);
+	connectLayerGroup('chk-soil', 'op-soil', soilLayers);
+	connectLayerGroup('chk-ice', 'op-ice', iceLayers);
+	connectLayerGroup('chk-lake', 'op-lake', lakeLayers);
 
 	// --- Fix 2: Panel Toggle Handler ---
 	function togglePanel(contentId, arrowId) {
