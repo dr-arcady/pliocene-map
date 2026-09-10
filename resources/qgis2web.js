@@ -1099,7 +1099,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	map.addLayer(pbdbVectorLayer);
 	
 	// --- Unified Self-Contained PBDB Vector Layer & Fetch ---
-	window.pbdbSource = new ol.source.Vector();
+	window.pbdbSource = new ol.source.Vector({
 		wrapX: true
 	});
 
