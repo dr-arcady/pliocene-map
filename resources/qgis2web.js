@@ -1161,8 +1161,24 @@ document.addEventListener('DOMContentLoaded', function() {
 	        hideSpinner();
 	    });
 
-// --- Direct Canvas Pointer Click Handler ---
+// --- Drag-Aware Pointer Handler for Touch and Desktop ---
+var dragStartPixel = null;
+
+map.getViewport().addEventListener('pointerdown', function(e) {
+    dragStartPixel = [e.clientX, e.clientY];
+});
+
 map.getViewport().addEventListener('pointerup', function(e) {
+    if (!dragStartPixel) return;
+
+    // Calculate displacement to separate panning from tapping
+    var deltaX = Math.abs(e.clientX - dragStartPixel[0]);
+    var deltaY = Math.abs(e.clientY - dragStartPixel[1]);
+    dragStartPixel = null;
+
+    // If pointer moved more than 6px, treat as a map drag/pan and ignore click popup
+    if (deltaX > 6 || deltaY > 6) return;
+
     var pixel = map.getEventPixel(e);
     var coord = map.getCoordinateFromPixel(pixel);
     if (!coord) return;
@@ -1171,9 +1187,8 @@ map.getViewport().addEventListener('pointerup', function(e) {
     var popupElem = document.getElementById('popup');
     var clickedFeature = null;
 
-    // Scan all vector layers at the exact clicked pixel
     map.forEachFeatureAtPixel(pixel, function(feature) {
-        if (feature) {
+        if (feature && (feature.get('tna') || feature.get('isFossil'))) {
             clickedFeature = feature;
             return true;
         }
@@ -1199,7 +1214,6 @@ map.getViewport().addEventListener('pointerup', function(e) {
     if (popupOverlay) popupOverlay.setPosition(coord);
     if (popupElem) popupElem.style.display = 'flex';
 
-    // Auto dismiss after 5 seconds
     if (window.coordPopupTimeout) clearTimeout(window.coordPopupTimeout);
     window.coordPopupTimeout = setTimeout(function() {
         if (popupElem) popupElem.style.display = 'none';
