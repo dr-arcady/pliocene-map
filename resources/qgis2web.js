@@ -1,4 +1,3 @@
-var worldExtent = [-180, -90, 180, 90];
 
 var map = new ol.Map({
     target: 'map',
@@ -6,13 +5,9 @@ var map = new ol.Map({
     layers: layersList,
     view: new ol.View({
         projection: 'EPSG:4326',
-        center: [0, 0],
-        zoom: 2,
-        minZoom: 2,
+        constrainResolution: true,
         maxZoom: 28,
-        extent: worldExtent,
-        smoothExtentConstraint: false,
-        multiWorld: false
+        minZoom: 1
     })
 });
 
@@ -894,44 +889,64 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	// --- GeoTIFF Layer Initialization ---
 
-	// --- Canvas Wrapped Static Image Layer Engine ---
-	function createWrappingRasterLayer(imageUrl, opacity) {
-	    var canvas = document.createElement('canvas');
-	    var ctx = canvas.getContext('2d');
-	    var img = new Image();
-	    img.crossOrigin = 'anonymous';
-
-	    var source = new ol.source.ImageStatic({
-	        url: imageUrl,
-	        projection: 'EPSG:4326',
-	        imageExtent: [-180, -90, 180, 90]
-	    });
-
-	    // Wrap inside standard tile source for continuous wrapX looping
-	    var tileSource = new ol.source.TileImage({
-	        projection: 'EPSG:4326',
-	        tileGrid: ol.tilegrid.createXYZ({ extent: [-180, -90, 180, 90], maxZoom: 28 }),
-	        wrapX: true,
-	        tileUrlFunction: function() { return imageUrl; }
-	    });
-
-	    var layer = new ol.layer.Tile({
-	        visible: false,
-	        opacity: opacity,
-	        source: tileSource
-	    });
-
-	    return layer;
-	}
-
-	var lsmLayer = createWrappingRasterLayer('layers/lsm.tif', 1.0);
-	var topoLayer = createWrappingRasterLayer('layers/topo.tif', 0.8);
-	var sstLayer = createWrappingRasterLayer('layers/sst.tif', 0.8);
-	var biomeLayer = createWrappingRasterLayer('layers/mbiome.tif', 0.8);
-	var soilLayer = createWrappingRasterLayer('layers/soil.tif', 0.8);
-	var iceLayer = createWrappingRasterLayer('layers/icemask.tif', 0.9);
-	var lakeLayer = createWrappingRasterLayer('layers/lake.tif', 0.9);
-
+	// --- GeoTIFF Layer Initialization ---
+	var lsmLayer = new ol.layer.WebGLTile({
+	  visible: false,
+	  opacity: 1.0,
+	  source: new ol.source.GeoTIFF({
+	    sources: [{ url: 'layers/lsm.tif' }]
+	  })
+	});
+	
+	var topoLayer = new ol.layer.WebGLTile({
+	  visible: false,
+	  opacity: 0.8,
+	  source: new ol.source.GeoTIFF({
+	    sources: [{ url: 'layers/topo.tif' }]
+	  })
+	});
+	
+	var sstLayer = new ol.layer.WebGLTile({
+	  visible: false,
+	  opacity: 0.8,
+	  source: new ol.source.GeoTIFF({
+	    sources: [{ url: 'layers/sst.tif' }]
+	  })
+	});
+	
+	var biomeLayer = new ol.layer.WebGLTile({
+	  visible: false,
+	  opacity: 0.8,
+	  source: new ol.source.GeoTIFF({
+	    sources: [{ url: 'layers/mbiome.tif' }]
+	  })
+	});
+	
+	var soilLayer = new ol.layer.WebGLTile({
+	  visible: false,
+	  opacity: 0.8,
+	  source: new ol.source.GeoTIFF({
+	    sources: [{ url: 'layers/soil.tif' }]
+	  })
+	});
+	
+	var iceLayer = new ol.layer.WebGLTile({
+	  visible: false,
+	  opacity: 0.9,
+	  source: new ol.source.GeoTIFF({
+	    sources: [{ url: 'layers/icemask.tif' }]
+	  })
+	});
+	
+	var lakeLayer = new ol.layer.WebGLTile({
+	  visible: false,
+	  opacity: 0.9,
+	  source: new ol.source.GeoTIFF({
+	    sources: [{ url: 'layers/lake.tif' }]
+	  })
+	});
+	
+	// Add overlay layers to map
 	map.addLayer(lsmLayer);
 	map.addLayer(topoLayer);
 	map.addLayer(sstLayer);
@@ -958,7 +973,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	    }
 	}
 
-	// Connect UI Controls directly to wrapped raster layers
+	// Connect UI Controls directly to WebGLTile GeoTIFF layers
 	connectLayer('chk-lsm', 'op-lsm', lsmLayer);
 	connectLayer('chk-topo', 'op-topo', topoLayer);
 	connectLayer('chk-sst', 'op-sst', sstLayer);
@@ -1080,9 +1095,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	map.addLayer(pbdbVectorLayer);
 	
 	// --- Unified Self-Contained PBDB Vector Layer & Fetch ---
-	window.pbdbSource = new ol.source.Vector({
-		wrapX: true
-	});
+	window.pbdbSource = new ol.source.Vector();
 
 	window.pbdbVectorLayer = new ol.layer.Vector({
 	    source: window.pbdbSource,
@@ -1118,7 +1131,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 	// Fetch Data Directly into Window Source
-	showSpinner('Fetching Fossils');
+	showSpinner('Fetching Pliocene Fossils...');
 	fetch('https://paleobiodb.org/data1.2/occs/list.json?interval=Pliocene&show=coords,ident,attr')
 	    .then(function(res) { return res.json(); })
 	    .then(function(data) {
@@ -1148,24 +1161,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	        hideSpinner();
 	    });
 
-// --- Drag-Aware Pointer Handler for Touch and Desktop ---
-var dragStartPixel = null;
-
-map.getViewport().addEventListener('pointerdown', function(e) {
-    dragStartPixel = [e.clientX, e.clientY];
-});
-
+// --- Direct Canvas Pointer Click Handler ---
 map.getViewport().addEventListener('pointerup', function(e) {
-    if (!dragStartPixel) return;
-
-    // Calculate displacement to separate panning from tapping
-    var deltaX = Math.abs(e.clientX - dragStartPixel[0]);
-    var deltaY = Math.abs(e.clientY - dragStartPixel[1]);
-    dragStartPixel = null;
-
-    // If pointer moved more than 6px, treat as a map drag/pan and ignore click popup
-    if (deltaX > 6 || deltaY > 6) return;
-
     var pixel = map.getEventPixel(e);
     var coord = map.getCoordinateFromPixel(pixel);
     if (!coord) return;
@@ -1174,8 +1171,9 @@ map.getViewport().addEventListener('pointerup', function(e) {
     var popupElem = document.getElementById('popup');
     var clickedFeature = null;
 
+    // Scan all vector layers at the exact clicked pixel
     map.forEachFeatureAtPixel(pixel, function(feature) {
-        if (feature && (feature.get('tna') || feature.get('isFossil'))) {
+        if (feature) {
             clickedFeature = feature;
             return true;
         }
@@ -1201,6 +1199,7 @@ map.getViewport().addEventListener('pointerup', function(e) {
     if (popupOverlay) popupOverlay.setPosition(coord);
     if (popupElem) popupElem.style.display = 'flex';
 
+    // Auto dismiss after 5 seconds
     if (window.coordPopupTimeout) clearTimeout(window.coordPopupTimeout);
     window.coordPopupTimeout = setTimeout(function() {
         if (popupElem) popupElem.style.display = 'none';
