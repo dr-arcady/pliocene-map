@@ -1174,7 +1174,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 	// Fetch Data Directly into Window Source
-	showSpinner('Fetching fossil data...');
+	showSpinner('loading...');
 	fetch('https://paleobiodb.org/data1.2/occs/list.json?interval=Pliocene&show=coords,ident,attr')
 	    .then(function(res) { return res.json(); })
 	    .then(function(data) {
