@@ -1031,7 +1031,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	    arrow.textContent = '▲';
 	  }
 	}
-	
+
+/*
 	// --- Fix 4: Click Map to Pop Out Coordinates with Copy Button ---
 	var popupElement = document.getElementById('click-coord-popup');
 	var popupOverlay = new ol.Overlay({
@@ -1043,8 +1044,10 @@ document.addEventListener('DOMContentLoaded', function() {
 	map.addOverlay(popupOverlay);
 	
 	var currentClickedCoords = "";
+
+*/
 	
-	// EXACT LINES TO REPLACE WITH
+/*
 	map.on('singleclick', function (evt) {
 	  var fossilChk = document.getElementById('chk-fossils');
 	  var fossilsVisible = fossilChk ? fossilChk.checked : false;
@@ -1082,7 +1085,9 @@ document.addEventListener('DOMContentLoaded', function() {
 	    }, 5000);
 	  }
 	});
-	
+
+*/ 
+/*	
 	// Copy Function
 	function copyCoordinates() {
 	  if (currentClickedCoords) {
@@ -1093,6 +1098,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	    });
 	  }
 	}
+*/
 	
 	// Fossil Occurrences Toggle (Targets ONLY pbdbVectorLayer)
 	var fossilChk = document.getElementById('chk-fossils');
@@ -1198,6 +1204,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	        hideSpinner();
 	    });
 
+/*
 // --- Direct Canvas Pointer Click Handler ---
 map.getViewport().addEventListener('pointerup', function(e) {
     var pixel = map.getEventPixel(e);
@@ -1243,3 +1250,4 @@ map.getViewport().addEventListener('pointerup', function(e) {
         if (popupOverlay) popupOverlay.setPosition(undefined);
     }, 5000);
 });
+*/
