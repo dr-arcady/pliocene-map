@@ -1220,10 +1220,10 @@ document.addEventListener('DOMContentLoaded', function() {
 	        var lat = coord[1].toFixed(4);
 	        var lon = coord[0].toFixed(4);
 
-	        content.innerHTML = '<div style="padding: 4px; font-family: sans-serif;">' +
-	            '<strong style="color: #8e44ad; font-size: 14px;">' + taxonName + '</strong><br>' +
-	            '<b>Record ID:</b> ' + recordId + '<br>' +
-	            '<b>Coordinates:</b> ' + lat + '°, ' + lon + '°' +
+	        content.innerHTML = '<div style="color: #000000; font-family: Arial, sans-serif; line-height: 1.4;">' +
+	            '<strong style="color: #8e44ad; font-size: 15px; display: block; margin-bottom: 4px;">' + taxonName + '</strong>' +
+	            '<b>Record ID:</b> <span style="color: #333333;">' + recordId + '</span><br>' +
+	            '<b>Coordinates:</b> <span style="color: #333333;">' + lat + '°, ' + lon + '°</span>' +
 	            '</div>';
 
 	        container.style.display = 'block';
