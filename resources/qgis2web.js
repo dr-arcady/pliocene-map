@@ -899,8 +899,23 @@ document.addEventListener('DOMContentLoaded', function() {
 	});
 	
 	var topoLayer = new ol.layer.WebGLTile({
-	  visible: false,
-	  opacity: 0.8,
+	  visible: true,
+	  opacity: 0.9,
+	  style: {
+	    color: [
+	      'case',
+	      // Dry Land (Elevation > 0): Render as distinct earthy green
+	      ['>', ['band', 1], 0],
+	      [46, 125, 50, 1],
+
+	      // Shallow Submerged Shelf (-200m to 0m): Render as distinct light turquoise
+	      ['>', ['band', 1], -200],
+	      [129, 212, 250, 1],
+
+	      // Deep Ocean (below -200m): Render as dark ocean blue
+	      [13, 71, 161, 1]
+	    ]
+	  },
 	  source: new ol.source.GeoTIFF({
 	    sources: [{ url: 'layers/topo.tif' }]
 	  })
